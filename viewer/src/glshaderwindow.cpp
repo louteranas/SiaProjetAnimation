@@ -27,7 +27,7 @@ glShaderWindow::glShaderWindow(QWindow *parent)
       gpgpu_vertices(0), gpgpu_normals(0), gpgpu_texcoords(0), gpgpu_colors(0), gpgpu_indices(0),
       environmentMap(0), texture(0), permTexture(0), pixels(0), mouseButton(Qt::NoButton), auxWidget(0),
       isGPGPU(false), hasComputeShaders(false), blinnPhong(true), transparent(true), eta(1.5), lightIntensity(1.0f), shininess(50.0f), lightDistance(5.0f), groundDistance(0.78),
-      shadowMap_fboId(0), shadowMap_rboId(0), shadowMap_textureId(0), fullScreenSnapshots(false), computeResult(0), 
+      shadowMap_fboId(0), shadowMap_rboId(0), shadowMap_textureId(0), fullScreenSnapshots(false), computeResult(0),
       m_indexBuffer(QOpenGLBuffer::IndexBuffer), ground_indexBuffer(QOpenGLBuffer::IndexBuffer)
 {
     // Default values you might want to tinker with
@@ -100,7 +100,7 @@ glShaderWindow::~glShaderWindow()
 
 
 void glShaderWindow::openSceneFromFile() {
-    QFileDialog dialog(0, "Open Scene", workingDirectory, "*.off *.obj *.ply *.3ds");
+    QFileDialog dialog(0, "Open Scene", workingDirectory, "*.off *.obj *.ply *.3ds *.bvh");
     dialog.setAcceptMode(QFileDialog::AcceptOpen);
     QString filename;
     int ret = dialog.exec();
@@ -305,7 +305,7 @@ QWidget *glShaderWindow::makeAuxWindow()
     return auxWidget;
 }
 
-void glShaderWindow::createSSBO() 
+void glShaderWindow::createSSBO()
 {
 #ifndef __APPLE__
 	glGenBuffers(4, ssbo);
@@ -755,7 +755,7 @@ void glShaderWindow::loadTexturesForShaders() {
             computeResult->allocateStorage();
             computeResult->bind(2);
         }
-    } else if ((ground_program->uniformLocation("shadowMap") != -1) 
+    } else if ((ground_program->uniformLocation("shadowMap") != -1)
     		|| (m_program->uniformLocation("shadowMap") != -1) ){
     	// without Qt functions this time
 		glActiveTexture(GL_TEXTURE2);
@@ -795,7 +795,7 @@ void glShaderWindow::loadTexturesForShaders() {
         glReadBuffer(GL_NONE);
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glBindTexture(GL_TEXTURE_2D, shadowMap_textureId);
-	}    
+	}
     m_program->release();
 }
 
@@ -994,9 +994,9 @@ void glShaderWindow::mouseMoveEvent(QMouseEvent *e)
         float rotAngle = (180.0/M_PI) * rotAxis.length() /(lastTBPosition.length() * currTBPosition.length()) ;
         rotAxis.normalize();
         QQuaternion rotation = QQuaternion::fromAxisAndAngle(rotAxis, rotAngle);
-        m_matrix[matrixMoving].translate(m_center); 
+        m_matrix[matrixMoving].translate(m_center);
         m_matrix[matrixMoving].rotate(rotation);
-        m_matrix[matrixMoving].translate(- m_center); 
+        m_matrix[matrixMoving].translate(- m_center);
         break;
     }
     case Qt::RightButton: {
@@ -1059,7 +1059,7 @@ void glShaderWindow::render()
         bool invertible;
         mat_inverse = mat_inverse.inverted(&invertible);
         persp_inverse = persp_inverse.inverted(&invertible);
-    } 
+    }
     if (hasComputeShaders) {
         // We bind the texture generated to texture unit 2 (0 is for the texture, 1 for the env map)
 #ifndef __APPLE__
@@ -1087,7 +1087,7 @@ void glShaderWindow::render()
         int worksize_x = nextPower2(width());
         int worksize_y = nextPower2(height());
         glDispatchCompute(worksize_x / compute_groupsize_x, worksize_y / compute_groupsize_y, 1);
-        glBindImageTexture(2, 0, 0, false, 0, GL_READ_ONLY, GL_RGBA32F); 
+        glBindImageTexture(2, 0, 0, false, 0, GL_READ_ONLY, GL_RGBA32F);
         glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
         compute_program->release();
 #endif

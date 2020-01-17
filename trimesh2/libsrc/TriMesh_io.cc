@@ -20,6 +20,7 @@ read texture coordinates.
 #include <cstdarg>
 #include "TriMesh.h"
 #include "strutil.h"
+#include "parser.h"
 using namespace std;
 
 #define dprintf TriMesh::dprintf
@@ -37,12 +38,15 @@ using namespace std;
 
 namespace trimesh {
 
+
+//std::vector<Joint*> parse(string argFile);
 // Forward declarations
 static bool read_ply(FILE *f, TriMesh *mesh);
 static bool read_3ds(FILE *f, TriMesh *mesh);
 static bool read_vvd(FILE *f, TriMesh *mesh);
 static bool read_ray(FILE *f, TriMesh *mesh);
 static bool read_obj(FILE *f, TriMesh *mesh);
+static bool read_bvh(std::string& filename, TriMesh *mesh);
 static bool read_off(FILE *f, TriMesh *mesh);
 static bool read_sm( FILE *f, TriMesh *mesh);
 static bool read_stl( FILE *f, TriMesh *mesh);
@@ -237,6 +241,13 @@ bool TriMesh::read_helper(const char *filename, TriMesh *mesh)
 {
 	if (!filename || *filename == '\0')
 		return false;
+	string s = string(filename);
+	if(s.substr(s.find_last_of(".") + 1) == "bvh"){
+		dprintf("CA MARCHE");
+		return read_bvh(s, mesh);
+	}else{
+
+	}
 
 	FILE *f = NULL;
 	bool ok = false;
@@ -258,7 +269,7 @@ bool TriMesh::read_helper(const char *filename, TriMesh *mesh)
 		}
 	}
 	dprintf("Reading %s... ", filename);
-
+	//dprintf("Reading %s... \n\n\n ",  s.substr(s.find_last_of(".") + 1).c_str());
 	// STL
 	if (begins_with(filename, "stl:-") || ends_with(filename, ".stl")) {
 		ok = read_stl(f, mesh);
@@ -346,7 +357,7 @@ out:
 // Read a ply file
 static bool read_ply(FILE *f, TriMesh *mesh)
 {
-	char buf[1024];	
+	char buf[1024];
 	bool binary = false, need_swap = false, float_color = false;
 	int result, nverts = 0, nfaces = 0, nstrips = 0, ngrid = 0;
 	int vert_len = 0, vert_pos = -1, vert_norm = -1;
@@ -565,6 +576,11 @@ static bool read_ply(FILE *f, TriMesh *mesh)
 	return true;
 }
 
+static bool read_bvh(std::string& filename, TriMesh *mesh){
+	std::vector<Joint*> joints = parse(filename);
+	std::cerr << "BVH FILE GENERATED\n\n\n\n\n";
+	return true;
+}
 
 #define CHUNK_3DS_MAIN  0x4d4d
 #define CHUNK_3DS_MODEL 0x3d3d
@@ -970,7 +986,7 @@ static bool read_verts_bin(FILE *f, TriMesh *mesh, bool &need_swap,
 	while (++i < new_nverts) {
 		COND_READ(true, buf[0], vert_len);
 		memcpy(&mesh->vertices[i][0], &buf[vert_pos], vert_size);
-		mesh->vertices[i][3] = 1.0; 
+		mesh->vertices[i][3] = 1.0;
 		if (have_norm) {
 			memcpy(&mesh->normals[i][0], &buf[vert_norm], norm_size);
 			mesh->normals[i][3] = 0.0;
