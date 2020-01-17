@@ -333,6 +333,7 @@ void glShaderWindow::bindSceneToProgram()
     m_vao.bind();
     // If we're doing GPGPU, the VAO is very simple: 4 vertices for a large square covering the screen.
     if (isGPGPU) {
+    // if(0){
         m_numFaces = 2;
         // Allocate and fill only once
         if (gpgpu_vertices == 0)
@@ -362,7 +363,7 @@ void glShaderWindow::bindSceneToProgram()
             gpgpu_indices[5] = 3;
         }
     } else m_numFaces = modelMesh->faces.size();
-
+    std::cerr << m_numFaces << std::endl;
     m_vertexBuffer.setUsagePattern(QOpenGLBuffer::StaticDraw);
     m_vertexBuffer.bind();
     if (!isGPGPU) m_vertexBuffer.allocate(&(modelMesh->vertices.front()), modelMesh->vertices.size() * sizeof(trimesh::point));

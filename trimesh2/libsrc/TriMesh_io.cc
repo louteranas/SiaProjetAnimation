@@ -579,6 +579,19 @@ static bool read_ply(FILE *f, TriMesh *mesh)
 static bool read_bvh(std::string& filename, TriMesh *mesh){
 	std::vector<Joint*> joints = parse(filename);
 	std::cerr << "BVH FILE GENERATED\n\n\n\n\n";
+	mesh->vertices.push_back(point(0, 0, 0, 1.));
+	mesh->vertices.push_back(point(1, 1, 1, 1.));
+	mesh->vertices.push_back(point(2, 2, 2, 1.));
+	mesh->faces.push_back(TriMesh::Face(0, 1, 2));
+	mesh->vertices.push_back(point(0, 0, 0, 1.));
+	mesh->vertices.push_back(point(1, 1, 1, 1.));
+	mesh->vertices.push_back(point(2, 2, 2, 1.));
+	mesh->faces.push_back(TriMesh::Face(3, 4, 5));
+	mesh->vertices.push_back(point(0, 0, 0, 1.));
+	mesh->vertices.push_back(point(1, 1, 1, 1.));
+	mesh->vertices.push_back(point(2, 2, 2, 1.));
+	mesh->faces.push_back(TriMesh::Face(6, 7, 8));
+
 	return true;
 }
 
