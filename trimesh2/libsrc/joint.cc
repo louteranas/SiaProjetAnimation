@@ -27,6 +27,7 @@ Joint* Joint::createFromFile(std::string fileName) {
 
 void Joint::animate(int iframe)
 {
+	std::cout << "ca bouge" << std::endl;
 	// Update dofs :
 	_curTx = 0; _curTy = 0; _curTz = 0;
 	_curRx = 0; _curRy = 0; _curRz = 0;

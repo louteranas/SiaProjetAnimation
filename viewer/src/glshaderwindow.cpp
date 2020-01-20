@@ -308,7 +308,9 @@ QWidget *glShaderWindow::makeAuxWindow()
 
 void glShaderWindow::startAnimation()
 {
-
+    modelMesh->joints[0]->animate(3);
+    std::cout << "on bouge la" << std::endl;
+    glBufferData(GL_SHADER_STORAGE_BUFFER, modelMesh->vertices.size() * sizeof(trimesh::point), &(modelMesh->vertices.front()), GL_STATIC_READ);
 }
 
 void glShaderWindow::createSSBO()
@@ -584,6 +586,7 @@ void glShaderWindow::openScene()
             modelMesh->bbox.max[2]);
 	if (compute_program) {
         createSSBO();
+        startAnimation();
     }
     bindSceneToProgram();
     initializeTransformForScene();

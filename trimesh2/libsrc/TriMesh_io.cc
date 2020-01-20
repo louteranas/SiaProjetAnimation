@@ -243,7 +243,7 @@ bool TriMesh::read_helper(const char *filename, TriMesh *mesh)
 		return false;
 	string s = string(filename);
 	if(s.substr(s.find_last_of(".") + 1) == "bvh"){
-		std::cerr<<"ok\n";
+		std::cerr<<"okk\n";
 		return read_bvh(s, mesh);
 	}
 
@@ -630,7 +630,13 @@ static void createMesh(Joint* pJoint, TriMesh* mesh, float x, float y, float z){
 
 static bool read_bvh(std::string& filename, TriMesh *mesh){
 	mesh->joints = parse(filename);
-	 
+	std::cerr << "x" << mesh->joints[0]->_curTx << std::endl;
+	std::cerr << "y" << mesh->joints[0]->_curTy << std::endl;
+	std::cerr << "z" << mesh->joints[0]->_curTz << std::endl;
+	mesh->joints[0]->animate(3);
+	std::cerr << "x" << mesh->joints[0]->_curTx << std::endl;
+	std::cerr << "y" << mesh->joints[0]->_curTy << std::endl;
+	std::cerr << "z" << mesh->joints[0]->_curTz << std::endl;
 	//std::cerr << "BVH FILE GENERATED\n\n\n\n\n";
 	createMesh(mesh->joints[0], mesh, 0, 0, 0);
 	return true;
