@@ -243,10 +243,8 @@ bool TriMesh::read_helper(const char *filename, TriMesh *mesh)
 		return false;
 	string s = string(filename);
 	if(s.substr(s.find_last_of(".") + 1) == "bvh"){
-		dprintf("CA MARCHE");
+		std::cerr<<"ok\n";
 		return read_bvh(s, mesh);
-	}else{
-
 	}
 
 	FILE *f = NULL;
@@ -576,9 +574,64 @@ static bool read_ply(FILE *f, TriMesh *mesh)
 	return true;
 }
 
+static void createTetrahedre(TriMesh* mesh, float curX, float curY, float curZ, float offX, float offY, float offZ, int currentId){
+
+	float ecart = 1.;
+
+	point p1 = point(curX + ecart,  curY - ecart, curZ + ecart, 1.);
+	point p2 = point(curX - ecart, curY - ecart, curZ - ecart, 1.);
+	point p3 = point(curX, curY + ecart, curZ + offZ, 1.);
+	point p4 = point(curX + offX, curY + offY, curZ + offZ, 1.);
+
+	mesh->vertices.push_back(p1);
+	int i1 = mesh->vertices.size() - 1;
+	mesh->vertices.push_back(p2);
+	int i2 = mesh->vertices.size() - 1;
+	mesh->vertices.push_back(p3);
+	int i3 = mesh->vertices.size() - 1;
+	mesh->vertices.push_back(p4);
+	int i4 = mesh->vertices.size() - 1;
+
+	mesh->faces[currentId][0] = i1;
+	mesh->faces[currentId][1] = i2;
+	mesh->faces[currentId][2] = i3;
+
+	mesh->faces[currentId + 1][0] = i1;
+	mesh->faces[currentId + 1][1] = i2;
+	mesh->faces[currentId + 1][2] = i4;
+
+	mesh->faces[currentId + 2][0] = i2;
+	mesh->faces[currentId + 2][1] = i3;
+	mesh->faces[currentId + 2][2] = i4;
+
+	mesh->faces[currentId + 3][0] = i1;
+	mesh->faces[currentId + 3][1] = i3;
+	mesh->faces[currentId + 3][2] = i4;
+}
+
+static void createMesh(Joint* pJoint, TriMesh* mesh, float x, float y, float z){
+
+	int sizeChildren(pJoint->_children.size());
+	if(sizeChildren == 0){
+		std::cerr<<"ok\n";
+		return;
+	}
+	int oldSize(mesh->faces.size());
+	mesh->faces.resize(oldSize + sizeChildren * 4);
+	float curX = x + pJoint->_offX;
+	float curY = y + pJoint->_offY;
+	float curZ = z + pJoint->_offZ;
+	for(int i = 0; i < sizeChildren; i++){
+		//mesh->faces.push_back(faces(0, 1, 2));
+		createTetrahedre(mesh, curX, curY, curZ, pJoint->_children[i]->_offX, pJoint->_children[i]->_offY, pJoint->_children[i]->_offZ, oldSize + 4*i);
+		createMesh(pJoint->_children[i], mesh, curX, curY, curZ);
+	}
+}
+
 static bool read_bvh(std::string& filename, TriMesh *mesh){
 	std::vector<Joint*> joints = parse(filename);
-	std::cerr << "BVH FILE GENERATED\n\n\n\n\n";
+	//std::cerr << "BVH FILE GENERATED\n\n\n\n\n";
+	createMesh(joints[0], mesh, 0, 0, 0);
 	return true;
 }
 
