@@ -14,6 +14,7 @@ Class for triangle meshes.
 #include "Vec.h"
 #include "Box.h"
 #include "Color.h"
+#include "joint.h"
 #include <vector>
 #include <string>
 #ifndef M_PIf
@@ -82,6 +83,7 @@ public:
 	// The basics: vertices and faces
 	::std::vector<point> vertices;
 	::std::vector<Face> faces;
+    ::std::vector<Joint*> joints;
 
 	// Triangle strips
 	::std::vector<int> tstrips;

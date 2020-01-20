@@ -14,6 +14,7 @@
 #include <QtGui/QOpenGLFunctions>
 #include <QtGui/QScreen>
 #include <QMouseEvent>
+#include "parser.h"
 
 
 class glShaderWindow : public OpenGLWindow
@@ -62,6 +63,7 @@ private:
     QOpenGLShaderProgram* prepareShaderProgram(const QString& vertexShaderPath, const QString& fragmentShaderPath);
     QOpenGLShaderProgram* prepareComputeProgram(const QString& computeShaderPath);
     void createSSBO();
+    void startAnimation();
     void bindSceneToProgram();
     void initializeTransformForScene();
     void initPermTexture();

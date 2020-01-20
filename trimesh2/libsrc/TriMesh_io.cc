@@ -629,9 +629,10 @@ static void createMesh(Joint* pJoint, TriMesh* mesh, float x, float y, float z){
 }
 
 static bool read_bvh(std::string& filename, TriMesh *mesh){
-	std::vector<Joint*> joints = parse(filename);
+	mesh->joints = parse(filename);
+	 
 	//std::cerr << "BVH FILE GENERATED\n\n\n\n\n";
-	createMesh(joints[0], mesh, 0, 0, 0);
+	createMesh(mesh->joints[0], mesh, 0, 0, 0);
 	return true;
 }
 

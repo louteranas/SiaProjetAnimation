@@ -17,6 +17,7 @@
 #include <QDebug>
 #include <assert.h>
 
+#include "parser_bvh/joint.h"
 #include "perlinNoise.h" // defines tables for Perlin Noise
 
 glShaderWindow::glShaderWindow(QWindow *parent)
@@ -303,6 +304,11 @@ QWidget *glShaderWindow::makeAuxWindow()
 
     auxWidget->setLayout(outer);
     return auxWidget;
+}
+
+void glShaderWindow::startAnimation()
+{
+
 }
 
 void glShaderWindow::createSSBO()
