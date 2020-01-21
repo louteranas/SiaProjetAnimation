@@ -43,6 +43,7 @@ public slots:
     void setShader(const QString& size);
     void cookTorranceClicked();
     void blinnPhongClicked();
+    void animationClicked();
     void transparentClicked();
     void opaqueClicked();
     void updateLightIntensity(int lightSliderValue);
@@ -101,6 +102,7 @@ private:
     // Parameters controlled by UI
     bool blinnPhong;
     bool transparent;
+    bool animate;
     float eta;
     float lightIntensity;
     float shininess;

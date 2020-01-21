@@ -3,6 +3,8 @@
 
 using namespace std;
 
+
+
 Joint* Joint::createFromFile(std::string fileName) {
 	Joint* root = NULL;
 	cout << "Loading from " << fileName << endl;
@@ -23,6 +25,35 @@ Joint* Joint::createFromFile(std::string fileName) {
 	cout << "file loaded" << endl;
 
 	return root;
+}
+
+Joint* Joint::create(std::string name, double offX, double offY, double offZ, Joint* parent, int id_liste) {
+	Joint* child = new Joint();
+	child->_name = name;
+	child->_offX = offX;
+	child->_offY = offY;
+	child->_offZ = offZ;
+	child->_curTx = 0;
+	child->_curTy = 0;
+	child->_curTz = 0;
+	child->_curRx = 0;
+	child->_curRy = 0;
+	child->_curRz = 0;
+	child->id_liste = id_liste;
+	//Initialisation dofs
+	child->_dofs = std::vector<AnimCurve>();
+	child->_dofs.push_back(AnimCurve("Xrotation"));
+	child->_dofs.push_back(AnimCurve("Yrotation"));
+	child->_dofs.push_back(AnimCurve("Zrotation"));
+	if (id_liste == 1) { //Si c'est le root
+		child->_dofs.push_back(AnimCurve("Xposition"));
+		child->_dofs.push_back(AnimCurve("Yposition"));
+		child->_dofs.push_back(AnimCurve("Zposition"));
+	}
+	if(parent != NULL) {
+		parent->_children.push_back(child);
+	}
+	return child;
 }
 
 void Joint::animate(int iframe)

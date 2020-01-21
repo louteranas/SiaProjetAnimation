@@ -6,7 +6,7 @@ Princeton University
 
 TriMesh.h
 Class for triangle meshes.
- 
+
  Modified by Forrester Cole (fcole@cs.princeton.edu)
  to include rudimentary support for texture coordinates.
 */
@@ -14,6 +14,7 @@ Class for triangle meshes.
 #include "Vec.h"
 #include "Box.h"
 #include "Color.h"
+#include "joint.h"
 #include <vector>
 #include <string>
 #ifndef M_PIf
@@ -82,6 +83,7 @@ public:
 	// The basics: vertices and faces
 	::std::vector<point> vertices;
 	::std::vector<Face> faces;
+	::std::vector<Joint*> joints;
 
 	// Triangle strips
 	::std::vector<int> tstrips;
@@ -175,6 +177,13 @@ protected:
 public:
 	static TriMesh *read(const char *filename);
 	static TriMesh *read(const ::std::string &filename);
+
+
+	//void createMesh(Joint* pJoint, TriMesh* mesh, float x, float y, float z);
+
+
+
+	void animate_joints(int i);
 	bool write(const char *filename);
 	bool write(const ::std::string &filename);
 

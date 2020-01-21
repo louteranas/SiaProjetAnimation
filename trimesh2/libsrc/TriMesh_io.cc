@@ -21,6 +21,7 @@ read texture coordinates.
 #include "TriMesh.h"
 #include "strutil.h"
 #include "parser.h"
+
 using namespace std;
 
 #define dprintf TriMesh::dprintf
@@ -217,6 +218,8 @@ bool TriMesh::write(const ::std::string &filename)
 {
 	return write(filename.c_str());
 }
+
+
 
 
 // Read a TriMesh from a file.  Defined to use a helper function to make
@@ -574,64 +577,104 @@ static bool read_ply(FILE *f, TriMesh *mesh)
 	return true;
 }
 
-static void createTetrahedre(TriMesh* mesh, float curX, float curY, float curZ, float offX, float offY, float offZ, int currentId){
-
-	float ecart = 1.;
-
-	point p1 = point(curX + ecart,  curY - ecart, curZ + ecart, 1.);
-	point p2 = point(curX - ecart, curY - ecart, curZ - ecart, 1.);
-	point p3 = point(curX, curY + ecart, curZ + offZ, 1.);
-	point p4 = point(curX + offX, curY + offY, curZ + offZ, 1.);
-
-	mesh->vertices.push_back(p1);
-	int i1 = mesh->vertices.size() - 1;
-	mesh->vertices.push_back(p2);
-	int i2 = mesh->vertices.size() - 1;
-	mesh->vertices.push_back(p3);
-	int i3 = mesh->vertices.size() - 1;
-	mesh->vertices.push_back(p4);
-	int i4 = mesh->vertices.size() - 1;
-
+static void createTriangle(TriMesh* mesh, int i1, int i2, int i3, int& currentId){
 	mesh->faces[currentId][0] = i1;
 	mesh->faces[currentId][1] = i2;
 	mesh->faces[currentId][2] = i3;
-
-	mesh->faces[currentId + 1][0] = i1;
-	mesh->faces[currentId + 1][1] = i2;
-	mesh->faces[currentId + 1][2] = i4;
-
-	mesh->faces[currentId + 2][0] = i2;
-	mesh->faces[currentId + 2][1] = i3;
-	mesh->faces[currentId + 2][2] = i4;
-
-	mesh->faces[currentId + 3][0] = i1;
-	mesh->faces[currentId + 3][1] = i3;
-	mesh->faces[currentId + 3][2] = i4;
+	currentId ++;
 }
+
+static void createRectangle(TriMesh* mesh, int i1, int i2, int i3, int i4, int& currentId){
+	mesh->faces[currentId][0] = i1;
+	mesh->faces[currentId][1] = i2;
+	mesh->faces[currentId][2] = i3;
+	currentId ++;
+
+	mesh->faces[currentId][0] = i2;
+	mesh->faces[currentId][1] = i3;
+	mesh->faces[currentId][2] = i4;
+	currentId++;
+}
+
+static void createPointOfTriangle(point& p1, point& p2, point& p3, float curX, float curY, float curZ, int invariant, float ecart){
+	if(invariant == 0){ //x constant
+		p1 = point(curX,  curY - ecart, curZ + ecart, 1.);
+		p2 = point(curX, curY + ecart, curZ + ecart, 1.);
+		p3 = point(curX, curY, curZ - ecart, 1.);
+	}else if (invariant == 2){ //z constant
+		p1 = point(curX - ecart,  curY + ecart, curZ, 1.);
+		p2 = point(curX + ecart, curY + ecart, curZ, 1.);
+		p3 = point(curX, curY - ecart, curZ, 1.);
+	}else if (invariant == 1){ //y constant
+		p1 = point(curX - ecart,  curY, curZ + ecart, 1.);
+		p2 = point(curX + ecart, curY, curZ + ecart, 1.);
+		p3 = point(curX, curY, curZ - ecart, 1.);
+	}else{
+		std::cerr<< "ERROR INVARIANT IN createPointOfTriangle is not in range(0,1,2) -> (x,y,z)\n\n\n";
+	}
+}
+
+static void createTetrahedre(TriMesh* mesh, float curX, float curY, float curZ, float offX, float offY, float offZ, int& currentId){
+
+	float ecart = 0.5;
+	point p1, p2, p3, p4, p5, p6;
+
+	int invariant = 5; //error value
+	if(abs(offX) > abs(offY) && abs(offX) > abs(offZ)){
+		invariant = 0; //X
+	}else if(abs(offZ) > abs(offY)){
+		invariant = 2; //Y
+	}else{
+		invariant = 1; //Y
+	}
+
+	createPointOfTriangle(p1, p2, p3, curX, curY, curZ, invariant, 1);
+
+	createPointOfTriangle(p4, p5, p6, curX + offX, curY + offY, curZ + offZ, invariant, 1);
+
+	mesh->vertices.push_back(p1); int i1 = mesh->vertices.size() - 1;
+	mesh->vertices.push_back(p2); int i2 = i1 + 1;
+	mesh->vertices.push_back(p3); int i3 = i2 + 1;
+	mesh->vertices.push_back(p4); int i4 = i3 + 1;
+	mesh->vertices.push_back(p5); int i5 = i4 + 1;
+	mesh->vertices.push_back(p6); int i6 = i5 + 1;
+
+	//on cree en double pour voir si l'affichage est meilleur...
+	createTriangle(mesh, i1, i2, i3, currentId);createTriangle(mesh, i3, i2, i1, currentId);
+	createRectangle(mesh, i1, i2, i4, i5, currentId);createRectangle(mesh, i5, i4, i2, i1, currentId);
+	createRectangle(mesh, i1, i3, i4, i6, currentId);createRectangle(mesh, i6, i4, i3, i1, currentId);
+	createRectangle(mesh, i2, i3, i5, i6, currentId);createRectangle(mesh, i6, i5, i3, i2, currentId);
+	createTriangle(mesh, i4, i5, i6, currentId);createTriangle(mesh, i6, i5, i4, currentId);
+}
+
 
 static void createMesh(Joint* pJoint, TriMesh* mesh, float x, float y, float z){
 
 	int sizeChildren(pJoint->_children.size());
 	if(sizeChildren == 0){
-		std::cerr<<"ok\n";
+		//std::cerr<<"ok\n";
 		return;
 	}
-	int oldSize(mesh->faces.size());
-	mesh->faces.resize(oldSize + sizeChildren * 4);
+	int nbFacesParJointure = 8;
+	int currentId(mesh->faces.size());
+	mesh->faces.resize(currentId + sizeChildren * nbFacesParJointure * 2); //si trop petit, segmentation fault
 	float curX = x + pJoint->_offX;
 	float curY = y + pJoint->_offY;
 	float curZ = z + pJoint->_offZ;
 	for(int i = 0; i < sizeChildren; i++){
 		//mesh->faces.push_back(faces(0, 1, 2));
-		createTetrahedre(mesh, curX, curY, curZ, pJoint->_children[i]->_offX, pJoint->_children[i]->_offY, pJoint->_children[i]->_offZ, oldSize + 4*i);
+		createTetrahedre(mesh, curX, curY, curZ, pJoint->_children[i]->_offX, pJoint->_children[i]->_offY, pJoint->_children[i]->_offZ, currentId);
 		createMesh(pJoint->_children[i], mesh, curX, curY, curZ);
 	}
 }
 
+
+
 static bool read_bvh(std::string& filename, TriMesh *mesh){
-	std::vector<Joint*> joints = parse(filename);
+	mesh->joints = parse(filename);
+	mesh->joints[0]->animate(0);
 	//std::cerr << "BVH FILE GENERATED\n\n\n\n\n";
-	createMesh(joints[0], mesh, 0, 0, 0);
+	createMesh(mesh->joints[0], mesh, mesh->joints[0]->_curTx, mesh->joints[0]->_curTy, mesh->joints[0]->_curTz);
 	return true;
 }
 
@@ -1519,6 +1562,16 @@ static void tess(const vector<point> &verts, const vector<int> &thisface,
 					     thisface[i]));
 }
 
+
+
+void TriMesh::animate_joints(int i){
+	//for(int i=0; i< )
+	//std::cerr<< this->joints.size() <<"\n";
+	this->joints[0]->animate(i);
+	this->faces.clear();
+	this->vertices.clear();
+	createMesh(this->joints[0], this, this->joints[0]->_curTx, this->joints[0]->_curTy, this->joints[0]->_curTz);
+}
 
 // Write mesh to a file
 bool TriMesh::write(const char *filename)

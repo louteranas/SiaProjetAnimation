@@ -17,6 +17,9 @@
 #include <QDebug>
 #include <assert.h>
 
+
+#include <unistd.h>
+
 #include "perlinNoise.h" // defines tables for Perlin Noise
 
 glShaderWindow::glShaderWindow(QWindow *parent)
@@ -39,6 +42,8 @@ glShaderWindow::glShaderWindow(QWindow *parent)
     m_fragShaderSuffix << "*.frag" << "*.fs";
     m_vertShaderSuffix << "*.vert" << "*.vs";
     m_compShaderSuffix << "*.comp" << "*.cs";
+
+    animate = false;
 }
 
 glShaderWindow::~glShaderWindow()
@@ -176,6 +181,19 @@ void glShaderWindow::cookTorranceClicked()
     renderNow();
 }
 
+void glShaderWindow::animationClicked()
+{
+    animate = !animate;
+
+	for(int i = 0; i < modelMesh->joints[0]->_dofs[0]._values.size(); i++){
+        modelMesh->animate_joints(i);
+        bindSceneToProgram();
+        renderNow();
+        usleep(20000);
+    }
+}
+
+
 void glShaderWindow::blinnPhongClicked()
 {
     blinnPhong = true;
@@ -247,6 +265,17 @@ QWidget *glShaderWindow::makeAuxWindow()
     vbox2->addWidget(transparent2);
     groupBox2->setLayout(vbox2);
     buttons->addWidget(groupBox2);
+    outer->addLayout(buttons);
+
+    QGroupBox *groupBox3 = new QGroupBox("Animation:");
+    QRadioButton *animationOn = new QRadioButton("&On");
+    if (animate) animationOn->setChecked(true);
+    else animationOn->setChecked(false);
+    connect(animationOn, SIGNAL(clicked()), this, SLOT(animationClicked()));
+    QVBoxLayout *vbox3 = new QVBoxLayout;
+    vbox3->addWidget(animationOn);
+    groupBox3->setLayout(vbox3);
+    buttons->addWidget(groupBox3);
     outer->addLayout(buttons);
 
     // light source intensity
