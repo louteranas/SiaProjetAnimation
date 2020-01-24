@@ -657,7 +657,7 @@ static void createTetrahedre(TriMesh* mesh, const QVector3D &curVect, const QVec
 }
 
 
-static void createMesh(Joint* pJoint, TriMesh* mesh, QVector3D& curVect){
+static void createMesh(Joint* pJoint, TriMesh* mesh, QVector3D& curVect, const QQuaternion& qparent){
 
 	int sizeChildren(pJoint->_children.size());
 	if(sizeChildren == 0){
@@ -676,21 +676,29 @@ static void createMesh(Joint* pJoint, TriMesh* mesh, QVector3D& curVect){
 	for(int i = 0; i < 16; i++){
 		std::cerr << i << " " << data[i]<<"\n";
 	}*/
-
+	//std::cerr << pJoint->_name;
 	for(int i = 0; i < sizeChildren; i++){
 		//mesh->faces.push_back(faces(0, 1, 2));
 		Joint* child = pJoint->_children[i];
-		QQuaternion qchild= QQuaternion::fromEulerAngles(child->_curRx, child->_curRy, child->_curRz);
-		//QQuaternion qchild= QQuaternion::fromEulerAngles(20, 0, 0);
 
-		std::cerr << child->_curRx<<" "<< child->_curRy<<" " <<child->_curRz<<"\n";
+		/*int baseY = sqrt(child->_offX * child->_offX + child->_offY  * child->_offY + child->_offZ * child->_offZ);
+
+		if(child->_offY < 0){
+			baseY = - baseY;
+		}*/
+
+		QQuaternion qchild =  QQuaternion::fromEulerAngles(pJoint->_curRx, pJoint->_curRy, pJoint->_curRz) * qparent ;
+		if(pJoint->_name.compare("lhipjoint") ==0 ){
+			//std::cerr << child->_curRx<<" "<< child->_curRy<<" " <<child->_curRz<<"\n";
+		}
+
 
 
 		QVector3D childVect = QVector3D(child->_offX, child->_offY, child->_offZ);
 		childVect = qchild * childVect + curVect;
 		//childVect = childVect + curVect;
 		createTetrahedre(mesh, curVect, childVect, currentId);
-		createMesh(pJoint->_children[i], mesh, childVect);
+		createMesh(pJoint->_children[i], mesh, childVect, qchild);
 	}
 }
 
@@ -699,9 +707,10 @@ static void createMesh(Joint* pJoint, TriMesh* mesh, QVector3D& curVect){
 static bool read_bvh(std::string& filename, TriMesh *mesh){
 	mesh->joints = parse(filename);
 	mesh->joints[0]->animate(0);
+	QQuaternion qRoot = QQuaternion::fromEulerAngles(0, 0, 0);
 	//std::cerr << "BVH FILE GENERATED\n\n\n\n\n";
 	QVector3D rootVect(mesh->joints[0]->_curTx, mesh->joints[0]->_curTy, mesh->joints[0]->_curTz);
-	createMesh(mesh->joints[0], mesh, rootVect);
+	createMesh(mesh->joints[0], mesh, rootVect, qRoot);
 	return true;
 }
 
@@ -1598,7 +1607,8 @@ void TriMesh::animate_joints(int i){
 	this->faces.clear();
 	this->vertices.clear();
 	QVector3D rootVect(this->joints[0]->_curTx, this->joints[0]->_curTy, this->joints[0]->_curTz);
-	createMesh(this->joints[0], this, rootVect);
+	QQuaternion qRoot = QQuaternion::fromEulerAngles(0, 0, 0);
+	createMesh(this->joints[0], this, rootVect, qRoot);
 }
 
 // Write mesh to a file

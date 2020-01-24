@@ -1,7 +1,7 @@
 # if (mac OS X)
 DESTDIR = ../viewer
 # ENDIF
-QT       += core gui opengl 
+QT       += core gui opengl
 
 TARGET = myViewer
 TEMPLATE = app
@@ -9,13 +9,14 @@ TEMPLATE = app
 macx {
   QMAKE_CXXFLAGS += -Wno-unknown-pragmas
 } else {
-  QMAKE_LFLAGS += -Wno-unknown-pragmas -fopenmp 
+  QMAKE_LFLAGS += -Wno-unknown-pragmas -fopenmp
 }
 
 SOURCES +=  \
             src/main.cpp \
             src/openglwindow.cpp \
-            src/glshaderwindow.cpp
+            src/glshaderwindow.cpp \
+            ../trimesh2/libsrc/TriMesh_io.cc
 
 HEADERS  += \
             src/openglwindow.h \
@@ -27,5 +28,3 @@ HEADERS  += \
 INCLUDEPATH += ../trimesh2/include/
 
 LIBS += -L../trimesh2/lib -ltrimesh
-
-

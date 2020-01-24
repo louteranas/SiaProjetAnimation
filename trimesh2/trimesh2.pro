@@ -47,7 +47,7 @@ libsrc/TriMesh_bounding.cc \
 libsrc/TriMesh_connectivity.cc \
 libsrc/TriMesh_curvature.cc \
 libsrc/TriMesh_grid.cc \
-libsrc/TriMesh_io.cc \
+#libsrc/TriMesh_io.cc \
 libsrc/TriMesh_normals.cc \
 libsrc/TriMesh_pointareas.cc \
 libsrc/TriMesh_stats.cc \
@@ -63,4 +63,3 @@ libsrc/remove.cc \
 libsrc/reorder_verts.cc \
 libsrc/shared.cc \
 libsrc/subdiv.cc
-
