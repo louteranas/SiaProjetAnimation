@@ -43,6 +43,7 @@ public slots:
     void setShader(const QString& size);
     void cookTorranceClicked();
     void blinnPhongClicked();
+    void threadAnimation();
     void animationClicked();
     void transparentClicked();
     void opaqueClicked();

@@ -18,6 +18,7 @@ read texture coordinates.
 #include <cerrno>
 #include <cctype>
 #include <cstdarg>
+#include <QtGui/QMatrix4x4>
 #include "TriMesh.h"
 #include "strutil.h"
 #include "parser.h"
@@ -614,10 +615,18 @@ static void createPointOfTriangle(point& p1, point& p2, point& p3, float curX, f
 	}
 }
 
-static void createTetrahedre(TriMesh* mesh, float curX, float curY, float curZ, float offX, float offY, float offZ, int& currentId){
+static void createTetrahedre(TriMesh* mesh, const QVector3D &curVect, const QVector3D &childVect, int& currentId){
 
-	float ecart = 0.5;
+	float ecart = 1.;
 	point p1, p2, p3, p4, p5, p6;
+
+	float curX = curVect.x();
+	float curY = curVect.y();
+	float curZ = curVect.z();
+
+	float offX = childVect.x() - curX;
+	float offY = childVect.y() - curY;
+	float offZ = childVect.z() - curZ;
 
 	int invariant = 5; //error value
 	if(abs(offX) > abs(offY) && abs(offX) > abs(offZ)){
@@ -628,9 +637,9 @@ static void createTetrahedre(TriMesh* mesh, float curX, float curY, float curZ, 
 		invariant = 1; //Y
 	}
 
-	createPointOfTriangle(p1, p2, p3, curX, curY, curZ, invariant, 1);
+	createPointOfTriangle(p1, p2, p3, curX, curY, curZ, invariant, ecart);
 
-	createPointOfTriangle(p4, p5, p6, curX + offX, curY + offY, curZ + offZ, invariant, 1);
+	createPointOfTriangle(p4, p5, p6, curX + offX, curY + offY, curZ + offZ, invariant, ecart);
 
 	mesh->vertices.push_back(p1); int i1 = mesh->vertices.size() - 1;
 	mesh->vertices.push_back(p2); int i2 = i1 + 1;
@@ -648,7 +657,7 @@ static void createTetrahedre(TriMesh* mesh, float curX, float curY, float curZ, 
 }
 
 
-static void createMesh(Joint* pJoint, TriMesh* mesh, float x, float y, float z){
+static void createMesh(Joint* pJoint, TriMesh* mesh, QVector3D& curVect){
 
 	int sizeChildren(pJoint->_children.size());
 	if(sizeChildren == 0){
@@ -658,13 +667,32 @@ static void createMesh(Joint* pJoint, TriMesh* mesh, float x, float y, float z){
 	int nbFacesParJointure = 8;
 	int currentId(mesh->faces.size());
 	mesh->faces.resize(currentId + sizeChildren * nbFacesParJointure * 2); //si trop petit, segmentation fault
-	float curX = x + pJoint->_offX;
-	float curY = y + pJoint->_offY;
-	float curZ = z + pJoint->_offZ;
+	//curMat.translate(pJoint->_offX, pJoint->_offY, pJoint->_offZ);
+	//const float* data = curMat.constData();
+	/*float curX = data[12]; //+ pJoint->_offX;
+	float curY = data[13]; //+ pJoint->_offY;
+	float curZ = data[14]; //+ pJoint->_offZ;
+	std::cerr << "x: "<< curX <<" y: " <<curY << " z: " << curZ <<"\n";
+	for(int i = 0; i < 16; i++){
+		std::cerr << i << " " << data[i]<<"\n";
+	}*/
+
 	for(int i = 0; i < sizeChildren; i++){
 		//mesh->faces.push_back(faces(0, 1, 2));
-		createTetrahedre(mesh, curX, curY, curZ, pJoint->_children[i]->_offX, pJoint->_children[i]->_offY, pJoint->_children[i]->_offZ, currentId);
-		createMesh(pJoint->_children[i], mesh, curX, curY, curZ);
+		Joint* child = pJoint->_children[i];
+		QQuaternion qchild= QQuaternion::fromEulerAngles(-child->_curRx, child->_curRy, child->_curRz);
+		//QQuaternion qchild= QQuaternion::fromEulerAngles(20, 0, 0);
+
+		std::cerr << child->_curRx<<" "<< child->_curRy<<" " <<child->_curRz<<"\n";
+
+		//std::cerr <<"\noffset : "<< child->_offX << " , " << child->_offY << " , "<<  child->_offZ << "\n";
+		//std::cerr <<"rotate : "<< child->_curRx << " , " << child->_curRy << " , "<<  child->_curRz << "\nnewoffset child:";
+
+		QVector3D childVect = QVector3D(child->_offX, child->_offY, child->_offZ);
+		childVect = qchild * childVect + curVect;
+		//childVect = childVect + curVect;
+		createTetrahedre(mesh, curVect, childVect, currentId);
+		createMesh(pJoint->_children[i], mesh, childVect);
 	}
 }
 
@@ -674,7 +702,8 @@ static bool read_bvh(std::string& filename, TriMesh *mesh){
 	mesh->joints = parse(filename);
 	mesh->joints[0]->animate(0);
 	//std::cerr << "BVH FILE GENERATED\n\n\n\n\n";
-	createMesh(mesh->joints[0], mesh, mesh->joints[0]->_curTx, mesh->joints[0]->_curTy, mesh->joints[0]->_curTz);
+	QVector3D rootVect(mesh->joints[0]->_curTx, mesh->joints[0]->_curTy, mesh->joints[0]->_curTz);
+	createMesh(mesh->joints[0], mesh, rootVect);
 	return true;
 }
 
@@ -1570,7 +1599,8 @@ void TriMesh::animate_joints(int i){
 	this->joints[0]->animate(i);
 	this->faces.clear();
 	this->vertices.clear();
-	createMesh(this->joints[0], this, this->joints[0]->_curTx, this->joints[0]->_curTy, this->joints[0]->_curTz);
+	QVector3D rootVect(this->joints[0]->_curTx, this->joints[0]->_curTy, this->joints[0]->_curTz);
+	createMesh(this->joints[0], this, rootVect);
 }
 
 // Write mesh to a file

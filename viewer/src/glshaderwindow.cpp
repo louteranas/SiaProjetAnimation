@@ -17,6 +17,8 @@
 #include <QDebug>
 #include <assert.h>
 
+#include <thread>
+
 
 #include <unistd.h>
 
@@ -181,16 +183,30 @@ void glShaderWindow::cookTorranceClicked()
     renderNow();
 }
 
-void glShaderWindow::animationClicked()
-{
-    animate = !animate;
-
-	for(int i = 0; i < modelMesh->joints[0]->_dofs[0]._values.size(); i++){
+void glShaderWindow::threadAnimation(){
+    for(int i = 0; i < modelMesh->joints[0]->_dofs[0]._values.size(); i++){
         modelMesh->animate_joints(i);
         bindSceneToProgram();
         renderNow();
-        usleep(20000);
+        std::this_thread::sleep_for(std::chrono::milliseconds(20));
     }
+}
+/*
+void threadAnimation(trimesh::TriMesh* modelMesh){
+    for(int i = 0; i < modelMesh->joints[0]->_dofs[0]._values.size(); i++){
+        modelMesh->animate_joints(i);
+        bindSceneToProgram();
+        renderNow();
+        std::this_thread::sleep_for(std::chrono::milliseconds(20));
+    }
+}*/
+
+void glShaderWindow::animationClicked()
+{
+    animate = !animate;
+    //std::thread th(&glShaderWindow::threadAnimation, this);
+    //th.join();
+    threadAnimation();
 }
 
 

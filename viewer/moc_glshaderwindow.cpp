@@ -21,8 +21,8 @@ QT_BEGIN_MOC_NAMESPACE
 QT_WARNING_PUSH
 QT_WARNING_DISABLE_DEPRECATED
 struct qt_meta_stringdata_glShaderWindow_t {
-    QByteArrayData data[24];
-    char stringdata0[345];
+    QByteArrayData data[25];
+    char stringdata0[361];
 };
 #define QT_MOC_LITERAL(idx, ofs, len) \
     Q_STATIC_BYTE_ARRAY_DATA_HEADER_INITIALIZER_WITH_OFFSET(len, \
@@ -46,15 +46,16 @@ QT_MOC_LITERAL(11, 142, 4), // "size"
 QT_MOC_LITERAL(12, 147, 9), // "setShader"
 QT_MOC_LITERAL(13, 157, 19), // "cookTorranceClicked"
 QT_MOC_LITERAL(14, 177, 17), // "blinnPhongClicked"
-QT_MOC_LITERAL(15, 195, 16), // "animationClicked"
-QT_MOC_LITERAL(16, 212, 18), // "transparentClicked"
-QT_MOC_LITERAL(17, 231, 13), // "opaqueClicked"
-QT_MOC_LITERAL(18, 245, 20), // "updateLightIntensity"
-QT_MOC_LITERAL(19, 266, 16), // "lightSliderValue"
-QT_MOC_LITERAL(20, 283, 15), // "updateShininess"
-QT_MOC_LITERAL(21, 299, 20), // "shininessSliderValue"
-QT_MOC_LITERAL(22, 320, 9), // "updateEta"
-QT_MOC_LITERAL(23, 330, 14) // "etaSliderValue"
+QT_MOC_LITERAL(15, 195, 15), // "threadAnimation"
+QT_MOC_LITERAL(16, 211, 16), // "animationClicked"
+QT_MOC_LITERAL(17, 228, 18), // "transparentClicked"
+QT_MOC_LITERAL(18, 247, 13), // "opaqueClicked"
+QT_MOC_LITERAL(19, 261, 20), // "updateLightIntensity"
+QT_MOC_LITERAL(20, 282, 16), // "lightSliderValue"
+QT_MOC_LITERAL(21, 299, 15), // "updateShininess"
+QT_MOC_LITERAL(22, 315, 20), // "shininessSliderValue"
+QT_MOC_LITERAL(23, 336, 9), // "updateEta"
+QT_MOC_LITERAL(24, 346, 14) // "etaSliderValue"
 
     },
     "glShaderWindow\0openSceneFromFile\0\0"
@@ -62,11 +63,12 @@ QT_MOC_LITERAL(23, 330, 14) // "etaSliderValue"
     "toggleFullScreen\0saveScreenshot\0"
     "makeAuxWindow\0QWidget*\0setWindowSize\0"
     "size\0setShader\0cookTorranceClicked\0"
-    "blinnPhongClicked\0animationClicked\0"
-    "transparentClicked\0opaqueClicked\0"
-    "updateLightIntensity\0lightSliderValue\0"
-    "updateShininess\0shininessSliderValue\0"
-    "updateEta\0etaSliderValue"
+    "blinnPhongClicked\0threadAnimation\0"
+    "animationClicked\0transparentClicked\0"
+    "opaqueClicked\0updateLightIntensity\0"
+    "lightSliderValue\0updateShininess\0"
+    "shininessSliderValue\0updateEta\0"
+    "etaSliderValue"
 };
 #undef QT_MOC_LITERAL
 
@@ -76,7 +78,7 @@ static const uint qt_meta_data_glShaderWindow[] = {
        7,       // revision
        0,       // classname
        0,    0, // classinfo
-      17,   14, // methods
+      18,   14, // methods
        0,    0, // properties
        0,    0, // enums/sets
        0,    0, // constructors
@@ -84,23 +86,24 @@ static const uint qt_meta_data_glShaderWindow[] = {
        0,       // signalCount
 
  // slots: name, argc, parameters, tag, flags
-       1,    0,   99,    2, 0x0a /* Public */,
-       3,    0,  100,    2, 0x0a /* Public */,
-       4,    0,  101,    2, 0x0a /* Public */,
-       5,    0,  102,    2, 0x0a /* Public */,
-       6,    0,  103,    2, 0x0a /* Public */,
-       7,    0,  104,    2, 0x0a /* Public */,
-       8,    0,  105,    2, 0x0a /* Public */,
-      10,    1,  106,    2, 0x0a /* Public */,
-      12,    1,  109,    2, 0x0a /* Public */,
-      13,    0,  112,    2, 0x0a /* Public */,
-      14,    0,  113,    2, 0x0a /* Public */,
-      15,    0,  114,    2, 0x0a /* Public */,
-      16,    0,  115,    2, 0x0a /* Public */,
-      17,    0,  116,    2, 0x0a /* Public */,
-      18,    1,  117,    2, 0x0a /* Public */,
-      20,    1,  120,    2, 0x0a /* Public */,
-      22,    1,  123,    2, 0x0a /* Public */,
+       1,    0,  104,    2, 0x0a /* Public */,
+       3,    0,  105,    2, 0x0a /* Public */,
+       4,    0,  106,    2, 0x0a /* Public */,
+       5,    0,  107,    2, 0x0a /* Public */,
+       6,    0,  108,    2, 0x0a /* Public */,
+       7,    0,  109,    2, 0x0a /* Public */,
+       8,    0,  110,    2, 0x0a /* Public */,
+      10,    1,  111,    2, 0x0a /* Public */,
+      12,    1,  114,    2, 0x0a /* Public */,
+      13,    0,  117,    2, 0x0a /* Public */,
+      14,    0,  118,    2, 0x0a /* Public */,
+      15,    0,  119,    2, 0x0a /* Public */,
+      16,    0,  120,    2, 0x0a /* Public */,
+      17,    0,  121,    2, 0x0a /* Public */,
+      18,    0,  122,    2, 0x0a /* Public */,
+      19,    1,  123,    2, 0x0a /* Public */,
+      21,    1,  126,    2, 0x0a /* Public */,
+      23,    1,  129,    2, 0x0a /* Public */,
 
  // slots: parameters
     QMetaType::Void,
@@ -117,9 +120,10 @@ static const uint qt_meta_data_glShaderWindow[] = {
     QMetaType::Void,
     QMetaType::Void,
     QMetaType::Void,
-    QMetaType::Void, QMetaType::Int,   19,
-    QMetaType::Void, QMetaType::Int,   21,
-    QMetaType::Void, QMetaType::Int,   23,
+    QMetaType::Void,
+    QMetaType::Void, QMetaType::Int,   20,
+    QMetaType::Void, QMetaType::Int,   22,
+    QMetaType::Void, QMetaType::Int,   24,
 
        0        // eod
 };
@@ -142,12 +146,13 @@ void glShaderWindow::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _
         case 8: _t->setShader((*reinterpret_cast< const QString(*)>(_a[1]))); break;
         case 9: _t->cookTorranceClicked(); break;
         case 10: _t->blinnPhongClicked(); break;
-        case 11: _t->animationClicked(); break;
-        case 12: _t->transparentClicked(); break;
-        case 13: _t->opaqueClicked(); break;
-        case 14: _t->updateLightIntensity((*reinterpret_cast< int(*)>(_a[1]))); break;
-        case 15: _t->updateShininess((*reinterpret_cast< int(*)>(_a[1]))); break;
-        case 16: _t->updateEta((*reinterpret_cast< int(*)>(_a[1]))); break;
+        case 11: _t->threadAnimation(); break;
+        case 12: _t->animationClicked(); break;
+        case 13: _t->transparentClicked(); break;
+        case 14: _t->opaqueClicked(); break;
+        case 15: _t->updateLightIntensity((*reinterpret_cast< int(*)>(_a[1]))); break;
+        case 16: _t->updateShininess((*reinterpret_cast< int(*)>(_a[1]))); break;
+        case 17: _t->updateEta((*reinterpret_cast< int(*)>(_a[1]))); break;
         default: ;
         }
     }
@@ -178,13 +183,13 @@ int glShaderWindow::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 17)
+        if (_id < 18)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 17;
+        _id -= 18;
     } else if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 17)
+        if (_id < 18)
             *reinterpret_cast<int*>(_a[0]) = -1;
-        _id -= 17;
+        _id -= 18;
     }
     return _id;
 }
