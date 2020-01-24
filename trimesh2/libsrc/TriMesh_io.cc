@@ -680,13 +680,11 @@ static void createMesh(Joint* pJoint, TriMesh* mesh, QVector3D& curVect){
 	for(int i = 0; i < sizeChildren; i++){
 		//mesh->faces.push_back(faces(0, 1, 2));
 		Joint* child = pJoint->_children[i];
-		QQuaternion qchild= QQuaternion::fromEulerAngles(-child->_curRx, child->_curRy, child->_curRz);
+		QQuaternion qchild= QQuaternion::fromEulerAngles(child->_curRx, child->_curRy, child->_curRz);
 		//QQuaternion qchild= QQuaternion::fromEulerAngles(20, 0, 0);
 
 		std::cerr << child->_curRx<<" "<< child->_curRy<<" " <<child->_curRz<<"\n";
 
-		//std::cerr <<"\noffset : "<< child->_offX << " , " << child->_offY << " , "<<  child->_offZ << "\n";
-		//std::cerr <<"rotate : "<< child->_curRx << " , " << child->_curRy << " , "<<  child->_curRz << "\nnewoffset child:";
 
 		QVector3D childVect = QVector3D(child->_offX, child->_offY, child->_offZ);
 		childVect = qchild * childVect + curVect;
