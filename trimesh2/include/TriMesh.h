@@ -84,6 +84,7 @@ public:
 	::std::vector<point> vertices;
 	::std::vector<Face> faces;
 	::std::vector<Joint*> joints;
+	::std::vector<std::vector<double>> weights;
 
 	// Triangle strips
 	::std::vector<int> tstrips;
@@ -183,7 +184,8 @@ public:
 
 
 
-	void animate_joints(int i);
+	void animate_joints(int i, TriMesh &skinningMesh);
+	void applySkinning(std::vector<Joint*> joints);
 	bool write(const char *filename);
 	bool write(const ::std::string &filename);
 

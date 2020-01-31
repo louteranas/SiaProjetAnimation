@@ -184,8 +184,8 @@ void glShaderWindow::cookTorranceClicked()
 }
 
 void glShaderWindow::threadAnimation(){
-    for(int i = 0; i < modelMesh->joints[0]->_dofs[0]._values.size(); i++){
-        modelMesh->animate_joints(i);
+    for(int i = 0; i < skinMesh->joints[0]->_dofs[0]._values.size(); i++){
+        skinMesh->animate_joints(i, *modelMesh);
         bindSceneToProgram();
         renderNow();
         std::this_thread::sleep_for(std::chrono::milliseconds(20));
@@ -601,7 +601,13 @@ void glShaderWindow::openScene()
         m_vao.release();
     }
 
+    skinName = QString("viewer/models/walk1.bvh");
+
+    skinMesh = trimesh::TriMesh::read(qPrintable(skinName));
+
     modelMesh = trimesh::TriMesh::read(qPrintable(modelName));
+    skinMesh->animate_joints(0, *modelMesh);
+    // modelMesh = skinMesh;
     if (!modelMesh) {
         QMessageBox::warning(0, tr("qViewer"),
                              tr("Could not load file ") + modelName, QMessageBox::Ok);
@@ -961,6 +967,22 @@ QOpenGLShaderProgram* glShaderWindow::prepareShaderProgram(const QString& vertex
     return program;
 }
 
+void glShaderWindow::keyPressEvent(QKeyEvent* e){
+	int key = e->key();
+	switch (key)
+	{
+	// case Qt::Key_Space:
+	// 	toggleAnimating();
+	// 	break;
+    case Qt::Key_A:
+		wireFrame = !wireFrame;
+        renderNow();
+		break;
+	default:
+		break;
+    }
+}
+
 QOpenGLShaderProgram* glShaderWindow::prepareComputeProgram(const QString& computeShaderPath)
 {
     QOpenGLShaderProgram* program = new QOpenGLShaderProgram(this);
@@ -1155,10 +1177,16 @@ void glShaderWindow::render()
         shadowMapGenerationProgram->setUniformValue("perspective", lightPerspective);
         // Draw the entire scene:
         m_vao.bind();
-        glDrawElements(GL_TRIANGLES, 3 * m_numFaces, GL_UNSIGNED_INT, 0);
+        if(wireFrame){
+            glDrawElements(GL_LINES, 3 * m_numFaces, GL_UNSIGNED_INT, 0);
+        }
+        else{
+            glDrawElements(GL_TRIANGLES, 3 * m_numFaces, GL_UNSIGNED_INT, 0);
+        }
+
         m_vao.release();
         ground_vao.bind();
-        glDrawElements(GL_TRIANGLES, g_numIndices, GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_LINES, g_numIndices, GL_UNSIGNED_INT, 0);
         ground_vao.release();
         glFinish();
         // done. Back to normal drawing.
@@ -1202,7 +1230,13 @@ void glShaderWindow::render()
     }
 
     m_vao.bind();
-    glDrawElements(GL_TRIANGLES, 3 * m_numFaces, GL_UNSIGNED_INT, 0);
+    if(wireFrame){
+        glDrawElements(GL_LINES, 3 * m_numFaces, GL_UNSIGNED_INT, 0);
+    }
+    else{
+        glDrawElements(GL_TRIANGLES, 3 * m_numFaces, GL_UNSIGNED_INT, 0);
+    }
+
     m_vao.release();
     m_program->release();
 
