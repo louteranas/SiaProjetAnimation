@@ -58,6 +58,7 @@ protected:
     void timerEvent(QTimerEvent *e);
     void resizeEvent(QResizeEvent * ev);
     void wheelEvent(QWheelEvent * ev);
+    void keyPressEvent(QKeyEvent* e);
 
 
 private:
@@ -77,10 +78,12 @@ private:
     bool hasComputeShaders;
     // Model we are displaying:
     QString  workingDirectory;
-    QString  modelName;
+    QString  modelName;    
+    QString  skinName;
     QString  textureName;
     QString  envMapName;
     trimesh::TriMesh* modelMesh;
+    trimesh::TriMesh* skinMesh;
     uchar* pixels;
     // Ground
     trimesh::point *g_vertices;
@@ -127,6 +130,7 @@ private:
     QOpenGLBuffer m_colorBuffer;
     QOpenGLBuffer m_texcoordBuffer;
     QOpenGLVertexArrayObject m_vao;
+    bool wireFrame = false;
     int m_numFaces;
 	QVector3D m_center;
 	QVector3D m_bbmin;

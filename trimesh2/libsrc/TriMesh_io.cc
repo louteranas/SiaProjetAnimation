@@ -22,6 +22,7 @@ read texture coordinates.
 #include "TriMesh.h"
 #include "strutil.h"
 #include "parser.h"
+#include "weightsParser.h"
 
 using namespace std;
 
@@ -247,7 +248,8 @@ bool TriMesh::read_helper(const char *filename, TriMesh *mesh)
 		return false;
 	string s = string(filename);
 	if(s.substr(s.find_last_of(".") + 1) == "bvh"){
-		std::cerr<<"ok\n";
+		std::cerr<<"ok" << filename <<"\n";
+
 		return read_bvh(s, mesh);
 	}
 
@@ -983,7 +985,7 @@ static bool read_off(FILE *f, TriMesh *mesh)
 		return false;
 	if (!read_faces_asc(f, mesh, nfaces, 1, 0, 1, true))
 		return false;
-
+	mesh->weights = getWeights();
 	return true;
 }
 
@@ -1599,11 +1601,60 @@ static void tess(const vector<point> &verts, const vector<int> &thisface,
 }
 
 
+double computePositionX(std::vector<double> weights, std::vector<Joint*> joints){
+	if((weights.size()+1) != joints.size()){
+		std::cerr << weights.size() << "weights and joints are not the same size"<< joints.size() << std::endl;
+		return 0;
+	}
+	double newPosX = 0;
+	for(int i = 0; i < weights.size(); i++){
+		newPosX += weights.at(i) * joints.at(i)->_curTx;
+	}
+	return newPosX;
+}
+double computePositionY(std::vector<double> weights, std::vector<Joint*> joints){
+	if((weights.size()+1) != joints.size()){
+		std::cerr << weights.size() << "weights and joints are not the same size"<< joints.size() << std::endl;
+		return 0;
+	}
+	double newPosY = 0;
+	for(int i = 0; i < weights.size(); i++){
+		newPosY += weights.at(i) * joints.at(i)->_curTy;
+	}
+	return newPosY;
+}
+double computePositionZ(std::vector<double> weights, std::vector<Joint*> joints){
+	if((weights.size()+1) != joints.size()){
 
-void TriMesh::animate_joints(int i){
+		std::cerr << weights.size() << "weights and joints are not the same size"<< joints.size() << std::endl;
+		return 0;
+	}
+	double newPosZ = 0;
+	for(int i = 0; i < weights.size(); i++){
+		newPosZ += weights.at(i) * joints.at(i)->_curTz;
+	}
+	return newPosZ;
+}
+
+
+
+void TriMesh::applySkinning(std::vector<Joint*> joints){
+	for(int i; i< this->vertices.size() ; i++){
+		this->vertices.at(i).at(0) = computePositionX(this->weights.at(i), joints);
+
+		this->vertices.at(i).at(1) = computePositionX(this->weights.at(i), joints);
+
+		this->vertices.at(i).at(2) = computePositionX(this->weights.at(i), joints);
+	}
+}
+
+
+void TriMesh::animate_joints(int i, TriMesh& skinningMesh){
 	//for(int i=0; i< )
 	//std::cerr<< this->joints.size() <<"\n";
 	this->joints[0]->animate(i);
+	std::cerr << this->joints.size() << std::endl;
+	skinningMesh.applySkinning(this->joints);
 	this->faces.clear();
 	this->vertices.clear();
 	QVector3D rootVect(this->joints[0]->_curTx, this->joints[0]->_curTy, this->joints[0]->_curTz);

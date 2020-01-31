@@ -35,7 +35,7 @@ MOVE          = mv -f
 TAR           = tar -cf
 COMPRESS      = gzip -9f
 DISTNAME      = trimesh1.0.0
-DISTDIR = /user/8/.base/desobryd/home/Desktop/3A/SiaProjetAnimation/trimesh2/.tmp/trimesh1.0.0
+DISTDIR = /user/0/.base/loutera/home/Documents/3a/SiaProjetAnimation/trimesh2/.tmp/trimesh1.0.0
 AR            = ar cqs
 RANLIB        = 
 SED           = sed
@@ -54,6 +54,10 @@ SOURCES       = libsrc/GLCamera.cc \
 		libsrc/TriMesh_connectivity.cc \
 		libsrc/TriMesh_curvature.cc \
 		libsrc/TriMesh_grid.cc \
+		libsrc/TriMesh_io.cc \
+		libsrc/joint.cc \
+		libsrc/parser.cc \
+		libsrc/weightsParser.cc \
 		libsrc/TriMesh_normals.cc \
 		libsrc/TriMesh_pointareas.cc \
 		libsrc/TriMesh_stats.cc \
@@ -76,6 +80,10 @@ OBJECTS       = GLCamera.o \
 		TriMesh_connectivity.o \
 		TriMesh_curvature.o \
 		TriMesh_grid.o \
+		TriMesh_io.o \
+		joint.o \
+		parser.o \
+		weightsParser.o \
 		TriMesh_normals.o \
 		TriMesh_pointareas.o \
 		TriMesh_stats.o \
@@ -255,6 +263,9 @@ DIST          = /usr/lib64/qt5/mkspecs/features/spec_pre.prf \
 		include/Vec.h \
 		include/XForm.h \
 		include/bsphere.h \
+		include/weightsParser.h \
+		include/joint.h \
+		include/parser.h \
 		include/lineqn.h \
 		include/mempool.h \
 		include/noise3d.h \
@@ -266,6 +277,10 @@ DIST          = /usr/lib64/qt5/mkspecs/features/spec_pre.prf \
 		libsrc/TriMesh_connectivity.cc \
 		libsrc/TriMesh_curvature.cc \
 		libsrc/TriMesh_grid.cc \
+		libsrc/TriMesh_io.cc \
+		libsrc/joint.cc \
+		libsrc/parser.cc \
+		libsrc/weightsParser.cc \
 		libsrc/TriMesh_normals.cc \
 		libsrc/TriMesh_pointareas.cc \
 		libsrc/TriMesh_stats.cc \
@@ -633,8 +648,8 @@ distdir: FORCE
 	@test -d $(DISTDIR) || mkdir -p $(DISTDIR)
 	$(COPY_FILE) --parents $(DIST) $(DISTDIR)/
 	$(COPY_FILE) --parents /usr/lib64/qt5/mkspecs/features/data/dummy.cpp $(DISTDIR)/
-	$(COPY_FILE) --parents include/Box.h include/Color.h include/GLCamera.h include/ICP.h include/KDtree.h include/TriMesh.h include/TriMesh_algo.h include/Vec.h include/XForm.h include/bsphere.h include/lineqn.h include/mempool.h include/noise3d.h include/strutil.h include/timestamp.h $(DISTDIR)/
-	$(COPY_FILE) --parents libsrc/GLCamera.cc libsrc/ICP.cc libsrc/KDtree.cc libsrc/TriMesh_bounding.cc libsrc/TriMesh_connectivity.cc libsrc/TriMesh_curvature.cc libsrc/TriMesh_grid.cc libsrc/TriMesh_normals.cc libsrc/TriMesh_pointareas.cc libsrc/TriMesh_stats.cc libsrc/TriMesh_tstrips.cc libsrc/conn_comps.cc libsrc/diffuse.cc libsrc/edgeflip.cc libsrc/faceflip.cc libsrc/filter.cc libsrc/lmsmooth.cc libsrc/overlap.cc libsrc/remove.cc libsrc/reorder_verts.cc libsrc/shared.cc libsrc/subdiv.cc $(DISTDIR)/
+	$(COPY_FILE) --parents include/Box.h include/Color.h include/GLCamera.h include/ICP.h include/KDtree.h include/TriMesh.h include/TriMesh_algo.h include/Vec.h include/XForm.h include/bsphere.h include/weightsParser.h include/joint.h include/parser.h include/lineqn.h include/mempool.h include/noise3d.h include/strutil.h include/timestamp.h $(DISTDIR)/
+	$(COPY_FILE) --parents libsrc/GLCamera.cc libsrc/ICP.cc libsrc/KDtree.cc libsrc/TriMesh_bounding.cc libsrc/TriMesh_connectivity.cc libsrc/TriMesh_curvature.cc libsrc/TriMesh_grid.cc libsrc/TriMesh_io.cc libsrc/joint.cc libsrc/parser.cc libsrc/weightsParser.cc libsrc/TriMesh_normals.cc libsrc/TriMesh_pointareas.cc libsrc/TriMesh_stats.cc libsrc/TriMesh_tstrips.cc libsrc/conn_comps.cc libsrc/diffuse.cc libsrc/edgeflip.cc libsrc/faceflip.cc libsrc/filter.cc libsrc/lmsmooth.cc libsrc/overlap.cc libsrc/remove.cc libsrc/reorder_verts.cc libsrc/shared.cc libsrc/subdiv.cc $(DISTDIR)/
 
 
 clean: compiler_clean 
@@ -746,6 +761,26 @@ TriMesh_grid.o: libsrc/TriMesh_grid.cc include/TriMesh.h \
 		include/lineqn.h \
 		include/KDtree.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o TriMesh_grid.o libsrc/TriMesh_grid.cc
+
+TriMesh_io.o: libsrc/TriMesh_io.cc include/TriMesh.h \
+		include/Vec.h \
+		include/Box.h \
+		include/strutil.h \
+		include/Color.h \
+		include/joint.h \
+		include/parser.h \
+		include/weightsParser.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o TriMesh_io.o libsrc/TriMesh_io.cc
+
+joint.o: libsrc/joint.cc include/joint.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o joint.o libsrc/joint.cc
+
+parser.o: libsrc/parser.cc include/parser.h \
+		include/joint.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o parser.o libsrc/parser.cc
+
+weightsParser.o: libsrc/weightsParser.cc include/weightsParser.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o weightsParser.o libsrc/weightsParser.cc
 
 TriMesh_normals.o: libsrc/TriMesh_normals.cc include/TriMesh.h \
 		include/Vec.h \
