@@ -48,6 +48,8 @@ libsrc/TriMesh_connectivity.cc \
 libsrc/TriMesh_curvature.cc \
 libsrc/TriMesh_grid.cc \
 #libsrc/TriMesh_io.cc \
+libsrc/joint.cc \
+libsrc/parser.cc \
 libsrc/TriMesh_normals.cc \
 libsrc/TriMesh_pointareas.cc \
 libsrc/TriMesh_stats.cc \

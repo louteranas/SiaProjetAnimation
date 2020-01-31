@@ -37,6 +37,8 @@ using namespace std;
 
 #define BIGNUM 1.0e10f
 
+#define NUM_VERSION 1
+
 
 namespace trimesh {
 
@@ -617,7 +619,7 @@ static void createPointOfTriangle(point& p1, point& p2, point& p3, float curX, f
 
 static void createTetrahedre(TriMesh* mesh, const QVector3D &curVect, const QVector3D &childVect, int& currentId){
 
-	float ecart = 1.;
+	float ecart = 0.3;
 	point p1, p2, p3, p4, p5, p6;
 
 	float curX = curVect.x();
@@ -656,61 +658,119 @@ static void createTetrahedre(TriMesh* mesh, const QVector3D &curVect, const QVec
 	createTriangle(mesh, i4, i5, i6, currentId);createTriangle(mesh, i6, i5, i4, currentId);
 }
 
-
-static void createMesh(Joint* pJoint, TriMesh* mesh, QVector3D& curVect, const QQuaternion& qparent){
-
+static void setAllTranslations(Joint* pJoint, Joint* parent){
+	pJoint->_curTx = parent->_curTx + pJoint->_offX;
+	pJoint->_curTy = parent->_curTy + pJoint->_offY;
+	pJoint->_curTz = parent->_curTz + pJoint->_offZ;
 	int sizeChildren(pJoint->_children.size());
-	if(sizeChildren == 0){
-		//std::cerr<<"ok\n";
-		return;
-	}
-	int nbFacesParJointure = 8;
-	int currentId(mesh->faces.size());
-	mesh->faces.resize(currentId + sizeChildren * nbFacesParJointure * 2); //si trop petit, segmentation fault
-	//curMat.translate(pJoint->_offX, pJoint->_offY, pJoint->_offZ);
-	//const float* data = curMat.constData();
-	/*float curX = data[12]; //+ pJoint->_offX;
-	float curY = data[13]; //+ pJoint->_offY;
-	float curZ = data[14]; //+ pJoint->_offZ;
-	std::cerr << "x: "<< curX <<" y: " <<curY << " z: " << curZ <<"\n";
-	for(int i = 0; i < 16; i++){
-		std::cerr << i << " " << data[i]<<"\n";
-	}*/
-	//std::cerr << pJoint->_name;
 	for(int i = 0; i < sizeChildren; i++){
-		//mesh->faces.push_back(faces(0, 1, 2));
 		Joint* child = pJoint->_children[i];
+		setAllTranslations(child, pJoint);
+	}
+}
 
-		/*int baseY = sqrt(child->_offX * child->_offX + child->_offY  * child->_offY + child->_offZ * child->_offZ);
-
-		if(child->_offY < 0){
-			baseY = - baseY;
-		}*/
-
-		QQuaternion qchild =  QQuaternion::fromEulerAngles(pJoint->_curRx, pJoint->_curRy, pJoint->_curRz) * qparent ;
-		if(pJoint->_name.compare("lhipjoint") ==0 ){
-			//std::cerr << child->_curRx<<" "<< child->_curRy<<" " <<child->_curRz<<"\n";
+static void rotateAllChilds(Joint* pJoint, Joint* ancestor){
+	int sizeChildren(pJoint->_children.size());
+	for(int i = 0; i < sizeChildren; i++){
+		Joint* child = pJoint->_children[i];
+		//setAllTranslations(child);
+		if(pJoint->_rorder == 0){
+			rotateAllChilds(child, pJoint);
 		}
+		rotateAllChilds(child, ancestor);
+	}
+	if(pJoint->_rorder == 1){
 
+	}else{
+		pJoint->_rorder = 1;
+		//std::cerr<<ancestor->_name  << "\n";
+	}
+	float delX = pJoint->_curTx - ancestor->_curTx;
+	float delY = pJoint->_curTy - ancestor->_curTy;
+	float delZ = pJoint->_curTz - ancestor->_curTz;
+	QVector3D deltaVect = QVector3D(delX, delY, delZ);
+	QQuaternion qancestor = QQuaternion::fromEulerAngles(ancestor->_curRx, ancestor->_curRy, ancestor->_curRz) ;
+	deltaVect = qancestor.rotatedVector(deltaVect);
+	pJoint->_curTx = ancestor->_curTx + deltaVect.x();
+	pJoint->_curTy = ancestor->_curTy + deltaVect.y();
+	pJoint->_curTz = ancestor->_curTz + deltaVect.z();
+	//std::cerr << pJoint->_name << " modifie par " << ancestor->_name << "\n";
+}
 
-
-		QVector3D childVect = QVector3D(child->_offX, child->_offY, child->_offZ);
-		childVect = qchild * childVect + curVect;
-		//childVect = childVect + curVect;
-		createTetrahedre(mesh, curVect, childVect, currentId);
-		createMesh(pJoint->_children[i], mesh, childVect, qchild);
+static void setAllRotatedTranslations(Joint* root){
+	int sizeChildren(root->_children.size());
+	for(int i = 0; i < sizeChildren; i++){
+		Joint* child = root->_children[i];
+		setAllTranslations(child, root);
+		rotateAllChilds(child, root);
 	}
 }
 
 
+static void createMesh(Joint* pJoint, TriMesh* mesh, const QMatrix4x4& parent, const QVector3D& parentPoint){
+	int sizeChildren(pJoint->_children.size());
+	int nbFacesParJointure = 8;
+	int currentId(mesh->faces.size());
+	mesh->faces.resize(currentId + nbFacesParJointure * 2); //si trop petit, segmentation fault
+	QMatrix4x4 currentMat = QMatrix4x4();
+	currentMat.translate(pJoint->_offX, pJoint->_offY, pJoint->_offZ);
+	currentMat.rotate(QQuaternion::fromEulerAngles(pJoint->_curRx, pJoint->_curRy, pJoint->_curRz));
+
+	currentMat = parent * currentMat ;
+	QVector3D currentPoint = currentMat * QVector3D();
+	createTetrahedre(mesh, parentPoint, currentPoint, currentId);
+	for(int i = 0; i < sizeChildren; i++){
+		Joint* child = pJoint->_children[i];
+
+		createMesh(child, mesh, currentMat, currentPoint);
+	}
+}
+
+static void createMesh2(Joint* pJoint, TriMesh* mesh){
+	int sizeChildren(pJoint->_children.size());
+	int nbFacesParJointure = 8;
+	int currentId(mesh->faces.size());
+	mesh->faces.resize(currentId + sizeChildren * nbFacesParJointure * 2); //si trop petit, segmentation fault
+
+	for(int i = 0; i < sizeChildren; i++){
+		Joint* child = pJoint->_children[i];
+
+		createTetrahedre(mesh, QVector3D(pJoint->_curTx, pJoint->_curTy, pJoint->_curTz), QVector3D(child->_curTx, child->_curTy, child->_curTz), currentId);
+		createMesh2(child, mesh);
+	}
+}
+
+static void resetAllJoints(std::vector<Joint*> joints){
+	for(int i=0, len=joints.size(); i < len; i++){
+		joints[i]->_rorder = 0;
+	}
+}
+
+static void createAllMesh(Joint* root, TriMesh* mesh){
+	QMatrix4x4 currentMat = QMatrix4x4();
+	currentMat.translate(root->_curTx, root->_curTy, root->_curTz);
+	//currentMat.translate(root->_offX, root->_offY, root->_offZ);
+	currentMat.rotate(QQuaternion::fromEulerAngles(root->_curRx, root->_curRy, root->_curRz));
+	QVector3D currentPoint = currentMat * QVector3D();
+	int sizeChildren(root->_children.size());
+	for(int i = 0; i < sizeChildren; i++){
+		Joint* child = root->_children[i];
+		createMesh(child, mesh, currentMat, currentPoint);
+	}
+}
 
 static bool read_bvh(std::string& filename, TriMesh *mesh){
 	mesh->joints = parse(filename);
 	mesh->joints[0]->animate(0);
-	QQuaternion qRoot = QQuaternion::fromEulerAngles(0, 0, 0);
+	//QQuaternion qRoot = QQuaternion::fromEulerAngles(0, 0, 0);
 	//std::cerr << "BVH FILE GENERATED\n\n\n\n\n";
-	QVector3D rootVect(mesh->joints[0]->_curTx, mesh->joints[0]->_curTy, mesh->joints[0]->_curTz);
-	createMesh(mesh->joints[0], mesh, rootVect, qRoot);
+	if(NUM_VERSION == 1){
+		resetAllJoints(mesh->joints);
+		setAllRotatedTranslations(mesh->joints[0]);
+		createMesh2(mesh->joints[0], mesh);
+	}else{
+		createAllMesh(mesh->joints[0], mesh);
+	}
 	return true;
 }
 
@@ -1598,17 +1658,19 @@ static void tess(const vector<point> &verts, const vector<int> &thisface,
 					     thisface[i]));
 }
 
-
-
 void TriMesh::animate_joints(int i){
 	//for(int i=0; i< )
 	//std::cerr<< this->joints.size() <<"\n";
 	this->joints[0]->animate(i);
 	this->faces.clear();
 	this->vertices.clear();
-	QVector3D rootVect(this->joints[0]->_curTx, this->joints[0]->_curTy, this->joints[0]->_curTz);
-	QQuaternion qRoot = QQuaternion::fromEulerAngles(0, 0, 0);
-	createMesh(this->joints[0], this, rootVect, qRoot);
+	if(NUM_VERSION == 1){
+		resetAllJoints(this->joints);
+		setAllRotatedTranslations(this->joints[0]);
+		createMesh2(this->joints[0], this);
+	}else{
+		createAllMesh(this->joints[0], this);
+	}
 }
 
 // Write mesh to a file

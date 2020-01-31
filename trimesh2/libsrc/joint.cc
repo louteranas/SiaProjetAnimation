@@ -39,6 +39,7 @@ Joint* Joint::create(std::string name, double offX, double offY, double offZ, Jo
 	child->_curRx = 0;
 	child->_curRy = 0;
 	child->_curRz = 0;
+	child->_rorder = 0;
 	child->id_liste = id_liste;
 	//Initialisation dofs
 	child->_dofs = std::vector<AnimCurve>();
