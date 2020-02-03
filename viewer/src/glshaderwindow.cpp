@@ -606,7 +606,8 @@ void glShaderWindow::openScene()
     skinMesh = trimesh::TriMesh::read(qPrintable(skinName));
 
     modelMesh = trimesh::TriMesh::read(qPrintable(modelName));
-    skinMesh->animate_joints(0, *modelMesh);
+    trimesh::TriMesh::setAllRotatedTranslations(modelMesh->joints[0]);
+    modelMesh->animate_joints(0, *skinMesh);
     // modelMesh = skinMesh;
     if (!modelMesh) {
         QMessageBox::warning(0, tr("qViewer"),

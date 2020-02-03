@@ -769,7 +769,8 @@ static bool read_bvh(std::string& filename, TriMesh *mesh){
 	if(NUM_VERSION == 1){
 		resetAllJoints(mesh->joints);
 		setAllRotatedTranslations(mesh->joints[0]);
-		createMesh2(mesh->joints[0], mesh);
+		//createMesh2(mesh->joints[0], mesh);
+		//skinningMesh.applySkinning(mesh->joints);
 	}else{
 		createAllMesh(mesh->joints[0], mesh);
 	}
@@ -1702,9 +1703,9 @@ void TriMesh::applySkinning(std::vector<Joint*> joints){
 	for(int i; i< this->vertices.size() ; i++){
 		this->vertices.at(i).at(0) = computePositionX(this->weights.at(i), joints);
 
-		this->vertices.at(i).at(1) = computePositionX(this->weights.at(i), joints);
+		this->vertices.at(i).at(1) = computePositionY(this->weights.at(i), joints);
 
-		this->vertices.at(i).at(2) = computePositionX(this->weights.at(i), joints);
+		this->vertices.at(i).at(2) = computePositionZ(this->weights.at(i), joints);
 	}
 }
 
