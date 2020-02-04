@@ -44,7 +44,6 @@ glShaderWindow::glShaderWindow(QWindow *parent)
     m_fragShaderSuffix << "*.frag" << "*.fs";
     m_vertShaderSuffix << "*.vert" << "*.vs";
     m_compShaderSuffix << "*.comp" << "*.cs";
-
     animate = false;
 }
 
@@ -184,15 +183,8 @@ void glShaderWindow::cookTorranceClicked()
 }
 
 void glShaderWindow::threadAnimation(){
-    for(int i = 0; i < modelMesh->joints[0]->_dofs[0]._values.size(); i++){
-        if(showSqlt)
-            modelMesh->animate_joints(i);
-        else
-            modelMesh->animate_skin(i);
-        bindSceneToProgram();
-        renderNow();
-        std::this_thread::sleep_for(std::chrono::milliseconds(20));
-    }
+    timerId.clear();
+    timerId.push_back(startTimer(20));
 }
 /*
 void threadAnimation(trimesh::TriMesh* modelMesh){
@@ -217,7 +209,7 @@ void glShaderWindow::sqltModeClicked()
     if(showSqlt)
         modelMesh = sqltMesh;
     else{
-        skinMesh->animate_skin(0);
+        skinMesh->animate_skin(timerId.size());
         modelMesh = skinMesh;
     }
     bindSceneToProgram();
@@ -503,7 +495,7 @@ void glShaderWindow::bindSceneToProgram()
 
     // Bind ground VAO to ground program as well
     // We create a VAO for the ground from scratch
-    ground_vao.bind();
+    /*ground_vao.bind();
     ground_vertexBuffer.setUsagePattern(QOpenGLBuffer::StaticDraw);
     ground_vertexBuffer.bind();
     trimesh::point center = modelMesh->bsphere.center;
@@ -592,6 +584,7 @@ void glShaderWindow::bindSceneToProgram()
     shadowMapGenerationProgram->enableAttributeArray( "texcoords" );
     ground_program->release();
     ground_vao.release();
+    */
 }
 
 void glShaderWindow::initializeTransformForScene()
@@ -1129,7 +1122,29 @@ void glShaderWindow::mouseReleaseEvent(QMouseEvent *e)
 
 void glShaderWindow::timerEvent(QTimerEvent *e)
 {
+    int t = e->timerId();
+    //std::cerr << t<<"\n";
+    if(timerId.size() > modelMesh->joints[0]->_dofs[0]._values.size()){
+        if(showSqlt)
+            modelMesh->animate_joints(0);
+        else
+            modelMesh->animate_skin(0);
+        bindSceneToProgram();
+        renderNow();
+        timerId.clear();
+        return;
+    }
+    if (t == timerId.back()){
+        if(showSqlt)
+            modelMesh->animate_joints(timerId.size() - 1);
+        else
+            modelMesh->animate_skin(timerId.size() - 1);
+        bindSceneToProgram();
+        renderNow();
+        //timerId.clear();
+        timerId.push_back(startTimer(20));
 
+    }
 }
 
 static int nextPower2(int x) {

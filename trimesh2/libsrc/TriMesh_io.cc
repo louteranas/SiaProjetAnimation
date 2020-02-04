@@ -621,7 +621,7 @@ static void createPointOfTriangle(point& p1, point& p2, point& p3, float curX, f
 
 static void createTetrahedre(TriMesh* mesh, const QVector3D &curVect, const QVector3D &childVect, int& currentId){
 
-	float ecart = 0.3;
+	float ecart = 2.;
 	point p1, p2, p3, p4, p5, p6;
 
 	float curX = curVect.x();
@@ -716,6 +716,7 @@ static void createMesh(Joint* pJoint, TriMesh* mesh, const QMatrix4x4& parent, c
 		mesh->faces.resize(currentId + nbFacesParJointure * 2); //si trop petit, segmentation fault
 	QMatrix4x4 currentMat = QMatrix4x4();
 	currentMat.translate(pJoint->_offX, pJoint->_offY, pJoint->_offZ);
+	//currentMat.translate(pJoint->_curTx, pJoint->_curTy, pJoint->_curTz);
 	currentMat.rotate(QQuaternion::fromEulerAngles(pJoint->_curRx, pJoint->_curRy, pJoint->_curRz));
 
 	currentMat = parent * currentMat ;

@@ -73,6 +73,9 @@ private:
     void openScene();
     void mouseToTrackball(QVector2D &in, QVector3D &out);
 
+
+
+    std::vector<int> timerId;
     // Are we using GPGPU?
     bool isGPGPU;
     // Are we using compute shaders?
