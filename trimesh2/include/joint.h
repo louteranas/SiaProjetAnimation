@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <iostream>
 #include <fstream>
+#include <QtGui/QMatrix4x4>
 
 class AnimCurve {
 public :
@@ -41,6 +42,9 @@ public :
 	double _curRy;						// current value of rotation about Y (deg)
 	double _curRz;						// current value of rotation about Z (deg)
 	int _rorder;						// order of euler angles to reconstruct rotation
+	QMatrix4x4 mat;
+	QVector3D positionInitial;
+	//std::vector<std::vector<float>> _children;	// children of the current joint
 	std::vector<Joint*> _children;	// children of the current joint
 
 

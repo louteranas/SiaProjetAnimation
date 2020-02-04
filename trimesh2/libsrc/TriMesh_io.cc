@@ -38,7 +38,7 @@ using namespace std;
 
 #define BIGNUM 1.0e10f
 
-#define NUM_VERSION 1
+#define NUM_VERSION 2
 
 
 namespace trimesh {
@@ -708,23 +708,25 @@ static void setAllRotatedTranslations(Joint* root){
 	}
 }
 
-
-static void createMesh(Joint* pJoint, TriMesh* mesh, const QMatrix4x4& parent, const QVector3D& parentPoint){
+static void createMesh(Joint* pJoint, TriMesh* mesh, const QMatrix4x4& parent, const QVector3D& parentPoint, bool addTetrahedre){
 	int sizeChildren(pJoint->_children.size());
 	int nbFacesParJointure = 8;
 	int currentId(mesh->faces.size());
-	mesh->faces.resize(currentId + nbFacesParJointure * 2); //si trop petit, segmentation fault
+	if(addTetrahedre)
+		mesh->faces.resize(currentId + nbFacesParJointure * 2); //si trop petit, segmentation fault
 	QMatrix4x4 currentMat = QMatrix4x4();
 	currentMat.translate(pJoint->_offX, pJoint->_offY, pJoint->_offZ);
 	currentMat.rotate(QQuaternion::fromEulerAngles(pJoint->_curRx, pJoint->_curRy, pJoint->_curRz));
 
 	currentMat = parent * currentMat ;
+	pJoint->mat = currentMat;
 	QVector3D currentPoint = currentMat * QVector3D();
-	createTetrahedre(mesh, parentPoint, currentPoint, currentId);
+	if(addTetrahedre)
+		createTetrahedre(mesh, parentPoint, currentPoint, currentId);
 	for(int i = 0; i < sizeChildren; i++){
 		Joint* child = pJoint->_children[i];
 
-		createMesh(child, mesh, currentMat, currentPoint);
+		createMesh(child, mesh, currentMat, currentPoint, addTetrahedre);
 	}
 }
 
@@ -748,31 +750,45 @@ static void resetAllJoints(std::vector<Joint*> joints){
 	}
 }
 
-static void createAllMesh(Joint* root, TriMesh* mesh){
+static void createAllMesh(Joint* root, TriMesh* mesh, bool addTetrahedre){
 	QMatrix4x4 currentMat = QMatrix4x4();
 	currentMat.translate(root->_curTx, root->_curTy, root->_curTz);
 	//currentMat.translate(root->_offX, root->_offY, root->_offZ);
 	currentMat.rotate(QQuaternion::fromEulerAngles(root->_curRx, root->_curRy, root->_curRz));
+	root->mat = currentMat;
 	QVector3D currentPoint = currentMat * QVector3D();
 	int sizeChildren(root->_children.size());
 	for(int i = 0; i < sizeChildren; i++){
 		Joint* child = root->_children[i];
-		createMesh(child, mesh, currentMat, currentPoint);
+		createMesh(child, mesh, currentMat, currentPoint, addTetrahedre);
+	}
+}
+
+static void setInitialPositions(Joint* curJoint){
+	//currentMat.translate(root->_offX, root->_offY, root->_offZ);
+	int sizeChildren(curJoint->_children.size());
+	for(int i = 0; i < sizeChildren; i++){
+		Joint* child = curJoint->_children[i];
+		child->positionInitial = curJoint->positionInitial + QVector3D(child->_offX, child->_offY, child->_offZ);
+		//std::cerr << child->positionInitial.x() <<" "  << child->positionInitial.y() <<" "  << child->positionInitial.z() <<"\n";
+		setInitialPositions(child);
 	}
 }
 
 static bool read_bvh(std::string& filename, TriMesh *mesh){
 	mesh->joints = parse(filename);
+	mesh->joints[0]->positionInitial = QVector3D(mesh->joints[0]->_curTx, mesh->joints[0]->_curTy, mesh->joints[0]->_curTz);
+	setInitialPositions(mesh->joints[0]);
 	mesh->joints[0]->animate(0);
 	//QQuaternion qRoot = QQuaternion::fromEulerAngles(0, 0, 0);
 	//std::cerr << "BVH FILE GENERATED\n\n\n\n\n";
 	if(NUM_VERSION == 1){
 		resetAllJoints(mesh->joints);
 		setAllRotatedTranslations(mesh->joints[0]);
-		//createMesh2(mesh->joints[0], mesh);
-		//skinningMesh.applySkinning(mesh->joints);
+		createMesh2(mesh->joints[0], mesh);
+		//mesh->applySkinning(mesh->joints);
 	}else{
-		createAllMesh(mesh->joints[0], mesh);
+		createAllMesh(mesh->joints[0], mesh, true);
 	}
 	return true;
 }
@@ -1246,6 +1262,7 @@ static bool read_verts_asc(FILE *f, TriMesh *mesh,
 	int old_nverts = mesh->vertices.size();
 	int new_nverts = old_nverts + nverts;
 	mesh->vertices.resize(new_nverts);
+	mesh->initialVertices.resize(new_nverts);
 	if (vert_norm > 0)
 		mesh->normals.resize(new_nverts);
 	if (vert_color > 0)
@@ -1265,6 +1282,7 @@ static bool read_verts_asc(FILE *f, TriMesh *mesh,
 					      &mesh->vertices[i][2]) != 3)
 					return false;
 				else mesh->vertices[i][3] = 1.0;
+				for(int k = 0; k < 4; k++){mesh->initialVertices[i][k] = mesh->vertices[i][k];}
 				j += 2;
 			} else if (j == vert_norm) {
 				if (fscanf(f, "%f %f %f",
@@ -1661,56 +1679,60 @@ static void tess(const vector<point> &verts, const vector<int> &thisface,
 					     thisface[i]));
 }
 
-
-double computePositionX(std::vector<double> weights, std::vector<Joint*> joints){
-	if(weights.size() != joints.size()){
-		std::cerr << weights.size() << "weights and joints are not the same size"<< joints.size() << std::endl;
-		return 0;
-	}
-	double newPosX = 0;
-	for(int i = 0; i < weights.size(); i++){
-		newPosX += weights.at(i) * joints.at(i)->_curTx;
-	}
-	return newPosX;
-}
-double computePositionY(std::vector<double> weights, std::vector<Joint*> joints){
-	if(weights.size() != joints.size()){
-		std::cerr << weights.size() << "weights and joints are not the same size"<< joints.size() << std::endl;
-		return 0;
-	}
-	double newPosY = 0;
-	for(int i = 0; i < weights.size(); i++){
-		newPosY += weights.at(i) * joints.at(i)->_curTy;
-	}
-	return newPosY;
-}
-double computePositionZ(std::vector<double> weights, std::vector<Joint*> joints){
+void computePosition(const point &initialVertice, point &vertice, std::vector<double> weights, std::vector<Joint*> joints){
 	if(weights.size() != joints.size()){
 
 		std::cerr << weights.size() << "weights and joints are not the same size"<< joints.size() << std::endl;
-		return 0;
+		return;
 	}
-	double newPosZ = 0;
+	//double newPosZ = 0;
+	float vx = 0, vy = 0, vz = 0;
+
 	for(int i = 0; i < weights.size(); i++){
-		newPosZ += weights.at(i) * joints.at(i)->_curTz;
+		//curVertice = joints[i]->mat * newVertice;
+		QMatrix4x4 currentMat = QMatrix4x4(joints[i]->mat);
+	/*	const float* data = currentMat.data();
+		float x = data[12], y = data[13], z = data[14];*/
+		QVector3D oldVertice = currentMat * QVector3D();//joints[i]->mat * QVector3D();
+		currentMat.translate(initialVertice[0] - joints[i]->positionInitial[0],
+			initialVertice[1] - joints[i]->positionInitial[1], initialVertice[2] - joints[i]->positionInitial[2]);
+		QVector3D newVertice = currentMat * QVector3D();
+		//vertice[0] = 0; vertice[1] = 0; vertice[2] = 0;
+		QVector3D curVertice = newVertice /*- oldVertice*/;
+		//std::cerr << curVertice.length() <<"\n";
+		//std::cerr<<weights[i]<<" ";
+		//curVertice *= (newVertice.length() / curVertice.length());
+		//std::cerr << curVertice.length() << " " <<  newVertice.length() <<" \n";
+		vx += weights.at(i) * curVertice.x();
+		vy += weights.at(i) * curVertice.y();
+		vz += weights.at(i) * curVertice.z();
 	}
-	return newPosZ;
+	vertice[0] = vx ;//+ joints[0]->_curTx;
+	vertice[1] = vy ;//+ joints[0]->_curTy;
+	vertice[2] = vz ;//+ joints[0]->_curTz;
+
+	//std::cerr << vertice[0] <<" "<<vertice[1] <<" "<<vertice[2]<<"\n";
+	//std::cerr<<"\n";
 }
-
-
 
 void TriMesh::applySkinning(std::vector<Joint*> joints){
-	for(int i; i< this->vertices.size() ; i++){
-		this->vertices.at(i).at(0) = computePositionX(this->weights.at(i), joints);
+	for(int i = 0; i< this->vertices.size() ; i++){
+		//this->vertices.at(i).at(0) = computePositionX(this->weights.at(i), joints);
 
-		this->vertices.at(i).at(1) = computePositionY(this->weights.at(i), joints);
-
-		this->vertices.at(i).at(2) = computePositionZ(this->weights.at(i), joints);
+		//this->vertices.at(i).at(1) = computePositionY(this->weights.at(i), joints);
+		computePosition(this->initialVertices[i], this->vertices[i], this->weights[i], joints);
+		//this->vertices.at(i).at(2) = computePositionZ(this->weights.at(i), joints);
 	}
+	//std::cerr << this->vertices[0][0] <<" "<<this->vertices[0][1] <<" "<<this->vertices[0][2]<<"\n";
 }
 
+void TriMesh::setJoints(std::vector<Joint*>& joints){
+	this->joints = joints;
+	resetAllJoints(this->joints);
+	setAllRotatedTranslations(this->joints[0]);
+}
 
-void TriMesh::animate_joints(int i, TriMesh& skinningMesh){
+void TriMesh::animate_joints(int i){
 	//for(int i=0; i< )
 	//std::cerr<< this->joints.size() <<"\n";
 	this->joints[0]->animate(i);
@@ -1720,11 +1742,21 @@ void TriMesh::animate_joints(int i, TriMesh& skinningMesh){
 	if(NUM_VERSION == 1){
 		resetAllJoints(this->joints);
 		setAllRotatedTranslations(this->joints[0]);
-		//createMesh2(this->joints[0], this);
-		skinningMesh.applySkinning(this->joints);
-		std::cerr <<this->joints[0]->_curTx<<" " << skinningMesh.vertices[0].at(0)<<"\n";
+		createMesh2(this->joints[0], this);
 	}else{
-		createAllMesh(this->joints[0], this);
+		createAllMesh(this->joints[0], this, true);
+	}
+}
+
+void TriMesh::animate_skin(int i){
+	this->joints[0]->animate(i);
+	if(NUM_VERSION == 1){
+		resetAllJoints(this->joints);
+		setAllRotatedTranslations(this->joints[0]);
+		this->applySkinning(this->joints);
+	}else{
+		createAllMesh(this->joints[0], this, false);
+		this->applySkinning(this->joints);
 	}
 }
 

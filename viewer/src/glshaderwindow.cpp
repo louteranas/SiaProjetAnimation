@@ -26,7 +26,7 @@
 
 glShaderWindow::glShaderWindow(QWindow *parent)
 // Initialize obvious default values here (e.g. 0 for pointers)
-    : OpenGLWindow(parent), modelMesh(0),
+    : OpenGLWindow(parent), modelMesh(0), sqltMesh(0), skinMesh(0), showSqlt(true),
       m_program(0), ground_program(0), compute_program(0), shadowMapGenerationProgram(0),
       g_vertices(0), g_normals(0), g_texcoords(0), g_colors(0), g_indices(0),
       gpgpu_vertices(0), gpgpu_normals(0), gpgpu_texcoords(0), gpgpu_colors(0), gpgpu_indices(0),
@@ -184,8 +184,11 @@ void glShaderWindow::cookTorranceClicked()
 }
 
 void glShaderWindow::threadAnimation(){
-    for(int i = 0; i < skinMesh->joints[0]->_dofs[0]._values.size(); i++){
-        skinMesh->animate_joints(i, *modelMesh);
+    for(int i = 0; i < modelMesh->joints[0]->_dofs[0]._values.size(); i++){
+        if(showSqlt)
+            modelMesh->animate_joints(i);
+        else
+            modelMesh->animate_skin(i);
         bindSceneToProgram();
         renderNow();
         std::this_thread::sleep_for(std::chrono::milliseconds(20));
@@ -208,7 +211,18 @@ void glShaderWindow::animationClicked()
     //th.join();
     threadAnimation();
 }
-
+void glShaderWindow::sqltModeClicked()
+{
+    showSqlt = !showSqlt;
+    if(showSqlt)
+        modelMesh = sqltMesh;
+    else{
+        skinMesh->animate_skin(0);
+        modelMesh = skinMesh;
+    }
+    bindSceneToProgram();
+    renderNow();
+}
 
 void glShaderWindow::blinnPhongClicked()
 {
@@ -285,11 +299,16 @@ QWidget *glShaderWindow::makeAuxWindow()
 
     QGroupBox *groupBox3 = new QGroupBox("Animation:");
     QRadioButton *animationOn = new QRadioButton("&On");
+    QRadioButton *sqltModeOn = new QRadioButton("&Sqlt");
     if (animate) animationOn->setChecked(true);
     else animationOn->setChecked(false);
+    if(showSqlt) sqltModeOn->setChecked(true);
+    else sqltModeOn->setChecked(false);
     connect(animationOn, SIGNAL(clicked()), this, SLOT(animationClicked()));
+    connect(sqltModeOn, SIGNAL(clicked()), this, SLOT(sqltModeClicked()));
     QVBoxLayout *vbox3 = new QVBoxLayout;
     vbox3->addWidget(animationOn);
+    vbox3->addWidget(sqltModeOn);
     groupBox3->setLayout(vbox3);
     buttons->addWidget(groupBox3);
     outer->addLayout(buttons);
@@ -601,14 +620,30 @@ void glShaderWindow::openScene()
         m_vao.release();
     }
 
-    skinName = QString("viewer/models/walk1.bvh");
+    QString sqltName = QString("viewer/models/walk1.bvh");
 
-    skinMesh = trimesh::TriMesh::read(qPrintable(skinName));
+    sqltMesh = trimesh::TriMesh::read(qPrintable(sqltName));
 
-    modelMesh = trimesh::TriMesh::read(qPrintable(modelName));
-    trimesh::TriMesh::setAllRotatedTranslations(modelMesh->joints[0]);
-    modelMesh->animate_joints(0, *skinMesh);
-    // modelMesh = skinMesh;
+    std::cerr <<sqltMesh->vertices.size()<<"\n";
+
+    skinMesh = trimesh::TriMesh::read(qPrintable(modelName));
+
+    skinMesh->setJoints(sqltMesh->joints);
+
+    //std::cerr <<qPrintable(modelName) <<"\n\n\n";
+
+    //modelMesh = trimesh::TriMesh::read(qPrintable(modelName));
+    //trimesh::TriMesh::setAllRotatedTranslations(modelMesh->joints[0]);
+
+    //modelMesh = sqltMesh;
+    //sqltMesh->animate_joints(0);
+    //modelMesh = sqltMesh;
+    skinMesh->animate_skin(0);
+    if(!showSqlt){
+        modelMesh = skinMesh;
+    }else{
+        modelMesh = sqltMesh;
+    }
     if (!modelMesh) {
         QMessageBox::warning(0, tr("qViewer"),
                              tr("Could not load file ") + modelName, QMessageBox::Ok);

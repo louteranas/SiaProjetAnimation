@@ -45,6 +45,7 @@ public slots:
     void blinnPhongClicked();
     void threadAnimation();
     void animationClicked();
+    void sqltModeClicked();
     void transparentClicked();
     void opaqueClicked();
     void updateLightIntensity(int lightSliderValue);
@@ -78,11 +79,12 @@ private:
     bool hasComputeShaders;
     // Model we are displaying:
     QString  workingDirectory;
-    QString  modelName;    
+    QString  modelName;
     QString  skinName;
     QString  textureName;
     QString  envMapName;
     trimesh::TriMesh* modelMesh;
+    trimesh::TriMesh* sqltMesh;
     trimesh::TriMesh* skinMesh;
     uchar* pixels;
     // Ground
@@ -107,6 +109,9 @@ private:
     bool blinnPhong;
     bool transparent;
     bool animate;
+
+    bool showSqlt;
+
     float eta;
     float lightIntensity;
     float shininess;

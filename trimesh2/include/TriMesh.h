@@ -82,6 +82,8 @@ public:
 
 	// The basics: vertices and faces
 	::std::vector<point> vertices;
+	::std::vector<point> initialVertices;
+
 	::std::vector<Face> faces;
 	::std::vector<Joint*> joints;
 	::std::vector<std::vector<double>> weights;
@@ -92,6 +94,7 @@ public:
 	// Grid, if present
 	::std::vector<int> grid;
 	int grid_width, grid_height;
+	QMatrix4x4 initialMat;
 
 	// Other per-vertex properties
 	::std::vector<Color> colors;
@@ -184,7 +187,9 @@ public:
 
 
 
-	void animate_joints(int i, TriMesh &skinningMesh);
+	void animate_joints(int i);
+	void animate_skin(int i);
+	void setJoints(std::vector<Joint*>& joints);
 	void applySkinning(std::vector<Joint*> joints);
 	bool write(const char *filename);
 	bool write(const ::std::string &filename);
