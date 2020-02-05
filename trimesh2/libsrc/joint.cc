@@ -79,6 +79,30 @@ void Joint::animate(int iframe)
 	}
 }
 
+void Joint::show(int iframe)
+{
+	// Update dofs :
+	if(_children.size() == 0)
+		return;
+	//std::cerr << _dofs[0]._values.size() <<"\n\n";
+	_curTx = 0; _curTy = 0; _curTz = 0;
+	_curRx = 0; _curRy = 0; _curRz = 0;
+	std::cerr<<" ( ";
+	for (unsigned int idof = 0 ; idof < _dofs.size() ; idof++) {
+		if(!_dofs[idof].name.compare("Xposition")) std::cerr<<_dofs[idof]._values[iframe]<<", ";
+		if(!_dofs[idof].name.compare("Yposition")) std::cerr<< _dofs[idof]._values[iframe] <<", ";
+		if(!_dofs[idof].name.compare("Zposition")) std::cerr<< _dofs[idof]._values[iframe] <<", ";
+		if(!_dofs[idof].name.compare("Zrotation")) std::cerr<< _dofs[idof]._values[iframe] <<", ";
+		if(!_dofs[idof].name.compare("Yrotation")) std::cerr<< _dofs[idof]._values[iframe] <<", ";
+		if(!_dofs[idof].name.compare("Xrotation")) std::cerr<< _dofs[idof]._values[iframe] <<", ";
+	}
+	std::cerr<<" ) ";
+	// Animate children :
+	for (unsigned int ichild = 0 ; ichild < _children.size() ; ichild++) {
+		_children[ichild]->show(iframe);
+	}
+}
+
 
 void Joint::nbDofs() {
 	if (_dofs.empty()) return;

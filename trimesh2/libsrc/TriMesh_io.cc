@@ -765,6 +765,30 @@ static void createAllMesh(Joint* root, TriMesh* mesh, bool addTetrahedre){
 	}
 }
 
+static float dist(const point& p1, const QVector3D& j2){
+	return (j2.x() - p1[0]) * (j2.x() - p1[0]) + (j2.y() - p1[1]) * (j2.y() - p1[1]) + (j2.z() - p1[2]) * (j2.z() - p1[2]);
+}
+
+static void setSimpleWeights(TriMesh* mesh){
+	int sizeI = mesh->initialVertices.size();
+	mesh->weights = std::vector<std::vector<double>>(sizeI);
+	for(int i = 0; i < sizeI; i++){
+		float distMin = dist(mesh->initialVertices[i], mesh->joints[0]->positionInitial);
+		int indiceMin = 0;
+		int sizeJ = mesh->joints.size();
+		mesh->weights[i] = std::vector<double>(sizeJ);
+ 		for(int j = 0; j < sizeJ; j++ ){
+			mesh->weights[i][j] = 0;
+			float curDist = dist(mesh->initialVertices[i], mesh->joints[j]->positionInitial);
+			if(curDist < distMin){
+				distMin = curDist;
+				indiceMin = j;
+			}
+		}
+		mesh->weights[i][indiceMin] = 1;
+	}
+}
+
 static void setInitialPositions(Joint* curJoint){
 	//currentMat.translate(root->_offX, root->_offY, root->_offZ);
 	int sizeChildren(curJoint->_children.size());
@@ -778,6 +802,7 @@ static void setInitialPositions(Joint* curJoint){
 
 static bool read_bvh(std::string& filename, TriMesh *mesh){
 	mesh->joints = parse(filename);
+	//mesh->joints[0]->show(317); std::cerr<<"\n\n\n";
 	mesh->joints[0]->positionInitial = QVector3D(mesh->joints[0]->_curTx, mesh->joints[0]->_curTy, mesh->joints[0]->_curTz);
 	setInitialPositions(mesh->joints[0]);
 	mesh->joints[0]->animate(0);
@@ -1063,8 +1088,18 @@ static bool read_off(FILE *f, TriMesh *mesh)
 		return false;
 	if (!read_faces_asc(f, mesh, nfaces, 1, 0, 1, true))
 		return false;
-	mesh->weights = getWeights();
+
+	//mesh->weights = getWeights();
+
 	return true;
+}
+
+void TriMesh::setWeights(bool smartWeights){
+	if(smartWeights){
+		this->weights = getWeights();
+	}else{
+		setSimpleWeights(this);
+	}
 }
 
 

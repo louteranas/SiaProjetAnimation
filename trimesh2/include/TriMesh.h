@@ -186,7 +186,7 @@ public:
 	//void createMesh(Joint* pJoint, TriMesh* mesh, float x, float y, float z);
 
 
-
+	void setWeights(bool smartWeights);
 	void animate_joints(int i);
 	void animate_skin(int i);
 	void setJoints(std::vector<Joint*>& joints);

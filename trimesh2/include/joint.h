@@ -67,6 +67,8 @@ public :
 
 	// Analysis of degrees of freedom :
 	void nbDofs();
+
+	void show(int iframe=0);
 };
 
 

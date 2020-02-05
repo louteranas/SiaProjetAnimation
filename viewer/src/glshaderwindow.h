@@ -112,6 +112,7 @@ private:
     bool blinnPhong;
     bool transparent;
     bool animate;
+    bool smartWeights;
 
     bool showSqlt;
 
