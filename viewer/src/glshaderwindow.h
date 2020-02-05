@@ -71,6 +71,7 @@ private:
     void initPermTexture();
     void loadTexturesForShaders();
     void openScene();
+    void showWeights();
     void mouseToTrackball(QVector2D &in, QVector3D &out);
 
 
@@ -86,6 +87,7 @@ private:
     QString  skinName;
     QString  textureName;
     QString  envMapName;
+    int currJoint;
     trimesh::TriMesh* modelMesh;
     trimesh::TriMesh* sqltMesh;
     trimesh::TriMesh* skinMesh;

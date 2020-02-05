@@ -1064,6 +1064,9 @@ static bool read_off(FILE *f, TriMesh *mesh)
 	if (!read_faces_asc(f, mesh, nfaces, 1, 0, 1, true))
 		return false;
 	mesh->weights = getWeights();
+	for(int i = 0; i < mesh->vertices.size(); i++){
+		mesh->colors.push_back(Color(1.0 ,1.,1.));
+	}
 	return true;
 }
 
