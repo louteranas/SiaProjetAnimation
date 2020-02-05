@@ -71,6 +71,7 @@ private:
     void initPermTexture();
     void loadTexturesForShaders();
     void openScene();
+    void showWeights();
     void mouseToTrackball(QVector2D &in, QVector3D &out);
 
 
@@ -98,6 +99,8 @@ private:
     int *g_indices;
     int g_numPoints;
     int g_numIndices;
+    int currJoint;
+    int frameRate;
     // GPGPU
     trimesh::point *gpgpu_vertices;
     trimesh::vec *gpgpu_normals;

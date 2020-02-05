@@ -1090,7 +1090,9 @@ static bool read_off(FILE *f, TriMesh *mesh)
 		return false;
 
 	//mesh->weights = getWeights();
-
+	for(int i = 0; i < mesh->vertices.size(); i++){
+		mesh->colors.push_back(Color(1.0 ,0.5,0.5));
+	}
 	return true;
 }
 

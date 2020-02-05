@@ -26,7 +26,7 @@
 
 glShaderWindow::glShaderWindow(QWindow *parent)
 // Initialize obvious default values here (e.g. 0 for pointers)
-    : OpenGLWindow(parent), modelMesh(0), sqltMesh(0), skinMesh(0), showSqlt(true), smartWeights(true),
+    : OpenGLWindow(parent), modelMesh(0), sqltMesh(0), skinMesh(0), showSqlt(true), currJoint(-1), smartWeights(false),
       m_program(0), ground_program(0), compute_program(0), shadowMapGenerationProgram(0),
       g_vertices(0), g_normals(0), g_texcoords(0), g_colors(0), g_indices(0),
       gpgpu_vertices(0), gpgpu_normals(0), gpgpu_texcoords(0), gpgpu_colors(0), gpgpu_indices(0),
@@ -587,6 +587,25 @@ void glShaderWindow::bindSceneToProgram()
     */
 }
 
+void glShaderWindow::showWeights(){
+    if(currJoint == -1){
+        return;
+    }
+    for(int i = 0; i < skinMesh->vertices.size(); i++){
+        skinMesh->colors.at(i) = trimesh::Color(1., 0.5, 0.5);
+    }
+    for(int i = 0; i < skinMesh->vertices.size(); i++){
+        if(skinMesh->weights.at(i).at(currJoint) > 0.000000001){
+            skinMesh->colors.at(i) = trimesh::Color(pow((1.-skinMesh->weights.at(i).at(currJoint)*1.0),3.), pow((1.-skinMesh->weights.at(i).at(currJoint)*1.0),3.), pow((1.-skinMesh->weights.at(i).at(currJoint)*1.0),3.));
+            //skinMesh->colors.at(i) = trimesh::Color(1., 0.0, 0.0);
+
+        }
+    }
+
+    m_colorBuffer.bind();
+    renderNow();
+}
+
 void glShaderWindow::initializeTransformForScene()
 {
     // Set standard transformation and light source
@@ -1006,6 +1025,25 @@ void glShaderWindow::keyPressEvent(QKeyEvent* e){
 	// 	break;
     case Qt::Key_A:
 		wireFrame = !wireFrame;
+        renderNow();
+		break;
+    case Qt::Key_Q:
+		smartWeights = !smartWeights;
+        skinMesh->setWeights(smartWeights);
+        renderNow();
+		break;
+
+    case Qt::Key_Right:
+		currJoint = (currJoint + 1) % sqltMesh->joints.size();
+        showWeights();
+        renderNow();
+		break;
+    case Qt::Key_Left:
+		if(currJoint < 0)
+            currJoint = 1;
+        else 
+            currJoint -= 1;
+        showWeights();
         renderNow();
 		break;
 	default:

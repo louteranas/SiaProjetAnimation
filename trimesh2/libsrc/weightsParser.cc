@@ -46,7 +46,7 @@ std::vector<std::vector<double>> getWeights(){
     ifstream flux(argFile);
     if(flux)
     {
-        cout << "Début de parsing des poids " << endl;
+        // cout << "Début de parsing des poids " << endl;
         std::vector<std::string> jointNames = readJoints(flux);
         int id = 0;
         while(flux){
