@@ -26,7 +26,7 @@
 
 glShaderWindow::glShaderWindow(QWindow *parent)
 // Initialize obvious default values here (e.g. 0 for pointers)
-    : OpenGLWindow(parent), modelMesh(0), sqltMesh(0), skinMesh(0), showSqlt(true), currJoint(-1), smartWeights(false),
+    : OpenGLWindow(parent), modelMesh(0), sqltMesh(0), skinMesh(0), showSqlt(true), currJoint(-1), smartWeights(false), frameRate(50),
       m_program(0), ground_program(0), compute_program(0), shadowMapGenerationProgram(0),
       g_vertices(0), g_normals(0), g_texcoords(0), g_colors(0), g_indices(0),
       gpgpu_vertices(0), gpgpu_normals(0), gpgpu_texcoords(0), gpgpu_colors(0), gpgpu_indices(0),
@@ -184,7 +184,7 @@ void glShaderWindow::cookTorranceClicked()
 
 void glShaderWindow::threadAnimation(){
     timerId.clear();
-    timerId.push_back(startTimer(20));
+    timerId.push_back(startTimer(frameRate));
 }
 /*
 void threadAnimation(trimesh::TriMesh* modelMesh){
@@ -237,6 +237,11 @@ void glShaderWindow::opaqueClicked()
 void glShaderWindow::updateLightIntensity(int lightSliderValue)
 {
     lightIntensity = lightSliderValue / 100.0;
+    renderNow();
+}
+
+void glShaderWindow::updateFrameRate(int frameRateSliderValue){
+    frameRate = frameRateSliderValue;
     renderNow();
 }
 
@@ -321,6 +326,23 @@ QWidget *glShaderWindow::makeAuxWindow()
     hboxLight->addWidget(lightLabelValue);
     outer->addLayout(hboxLight);
     outer->addWidget(lightSlider);
+
+    // light source intensity
+    QSlider* frameRateSlider = new QSlider(Qt::Horizontal);
+    frameRateSlider->setTickPosition(QSlider::TicksBelow);
+    frameRateSlider->setMinimum(10);
+    frameRateSlider->setMaximum(200);
+    frameRateSlider->setSliderPosition(frameRate);
+    connect(frameRateSlider,SIGNAL(valueChanged(int)),this,SLOT(updateFrameRate(int)));
+    QLabel* frLabel = new QLabel("Frame rate = ");
+    QLabel* frLabelValue = new QLabel();
+    frLabelValue->setNum(1000./frameRate);
+    connect(frameRateSlider,SIGNAL(valueChanged(int)),frLabelValue,SLOT(setNum(int)));
+    QHBoxLayout *hboxFR = new QHBoxLayout;
+    hboxFR->addWidget(frLabel);
+    hboxFR->addWidget(frLabelValue);
+    outer->addLayout(hboxFR);
+    outer->addWidget(frameRateSlider);
 
     // Phong shininess slider
     QSlider* shininessSlider = new QSlider(Qt::Horizontal);
@@ -632,13 +654,13 @@ void glShaderWindow::openScene()
         m_vao.release();
     }
 
-    QString sqltName = QString("viewer/models/walk1.bvh");
+    QString skinName = QString("viewer/models/skin.off");
 
-    sqltMesh = trimesh::TriMesh::read(qPrintable(sqltName));
+    sqltMesh = trimesh::TriMesh::read(qPrintable(modelName));
 
     //std::cerr <<sqltMesh->vertices.size()<<"\n";
 
-    skinMesh = trimesh::TriMesh::read(qPrintable(modelName));
+    skinMesh = trimesh::TriMesh::read(qPrintable(skinName));
 
     skinMesh->setJoints(sqltMesh->joints);
     skinMesh->setWeights(smartWeights);
@@ -1041,7 +1063,7 @@ void glShaderWindow::keyPressEvent(QKeyEvent* e){
     case Qt::Key_Left:
 		if(currJoint < 0)
             currJoint = 1;
-        else 
+        else
             currJoint -= 1;
         showWeights();
         renderNow();
@@ -1181,7 +1203,7 @@ void glShaderWindow::timerEvent(QTimerEvent *e)
         bindSceneToProgram();
         renderNow();
         //timerId.clear();
-        timerId.push_back(startTimer(20));
+        timerId.push_back(startTimer(frameRate));
 
     }
 }

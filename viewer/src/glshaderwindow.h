@@ -48,6 +48,7 @@ public slots:
     void sqltModeClicked();
     void transparentClicked();
     void opaqueClicked();
+    void updateFrameRate(int frameRateSliderValue);
     void updateLightIntensity(int lightSliderValue);
     void updateShininess(int shininessSliderValue);
     void updateEta(int etaSliderValue);
