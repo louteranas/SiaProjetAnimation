@@ -671,6 +671,17 @@ static void setAllTranslations(Joint* pJoint, Joint* parent){
 	}
 }
 
+static float tograd(float angle){
+	return angle * 3.14159/180.;
+}
+static void rotateMat(QMatrix4x4& qmatInput, float rx, float ry, float rz){
+	QMatrix4x4 mrx = QMatrix4x4(), mry = QMatrix4x4(), mrz = QMatrix4x4();
+	mrx.data()[5] = cos(rx); mrx.data()[6] = sin(rx); mrx.data()[9] = -sin(rx); mrx.data()[10] = cos(rx);
+	mry.data()[0] = cos(ry); mry.data()[2] = -sin(ry); mry.data()[8] = sin(ry); mry.data()[10] = cos(ry);
+	mrz.data()[0] = cos(rz); mrz.data()[1] = sin(rz); mrz.data()[4] = -sin(rz); mrz.data()[5] = cos(rz);
+	qmatInput *= (mrx * mry * mrz);
+}
+
 static void rotateAllChilds(Joint* pJoint, Joint* ancestor){
 	int sizeChildren(pJoint->_children.size());
 	for(int i = 0; i < sizeChildren; i++){
@@ -691,8 +702,11 @@ static void rotateAllChilds(Joint* pJoint, Joint* ancestor){
 	float delY = pJoint->_curTy - ancestor->_curTy;
 	float delZ = pJoint->_curTz - ancestor->_curTz;
 	QVector3D deltaVect = QVector3D(delX, delY, delZ);
-	QQuaternion qancestor = QQuaternion::fromEulerAngles(ancestor->_curRx, ancestor->_curRy, ancestor->_curRz) ;
-	deltaVect = qancestor.rotatedVector(deltaVect);
+	//QQuaternion qancestor = QQuaternion::fromEulerAngles(ancestor->_curRx, ancestor->_curRy, ancestor->_curRz) ;
+	//deltaVect = qancestor.rotatedVector(deltaVect);
+	QMatrix4x4 rotMatr = QMatrix4x4();
+	rotateMat(rotMatr, tograd(ancestor->_curRx), tograd(ancestor->_curRy), tograd(ancestor->_curRz));
+	deltaVect = rotMatr * deltaVect;
 	pJoint->_curTx = ancestor->_curTx + deltaVect.x();
 	pJoint->_curTy = ancestor->_curTy + deltaVect.y();
 	pJoint->_curTz = ancestor->_curTz + deltaVect.z();
@@ -717,8 +731,8 @@ static void createMesh(Joint* pJoint, TriMesh* mesh, const QMatrix4x4& parent, c
 	QMatrix4x4 currentMat = QMatrix4x4();
 	currentMat.translate(pJoint->_offX, pJoint->_offY, pJoint->_offZ);
 	//currentMat.translate(pJoint->_curTx, pJoint->_curTy, pJoint->_curTz);
-	currentMat.rotate(QQuaternion::fromEulerAngles(pJoint->_curRx, pJoint->_curRy, pJoint->_curRz));
-
+	//currentMat.rotate(QQuaternion::fromEulerAngles(pJoint->_curRx, pJoint->_curRy, pJoint->_curRz));
+	rotateMat(currentMat, tograd(pJoint->_curRx), tograd(pJoint->_curRy), tograd(pJoint->_curRz));
 	currentMat = parent * currentMat ;
 	pJoint->mat = currentMat;
 	QVector3D currentPoint = currentMat * QVector3D();
@@ -755,7 +769,8 @@ static void createAllMesh(Joint* root, TriMesh* mesh, bool addTetrahedre){
 	QMatrix4x4 currentMat = QMatrix4x4();
 	currentMat.translate(root->_curTx, root->_curTy, root->_curTz);
 	//currentMat.translate(root->_offX, root->_offY, root->_offZ);
-	currentMat.rotate(QQuaternion::fromEulerAngles(root->_curRx, root->_curRy, root->_curRz));
+	//currentMat.rotate(QQuaternion::fromEulerAngles(root->_curRx, root->_curRy, root->_curRz));
+	rotateMat(currentMat, 0, tograd(root->_curRy), 0);
 	root->mat = currentMat;
 	QVector3D currentPoint = currentMat * QVector3D();
 	int sizeChildren(root->_children.size());
